@@ -4,6 +4,7 @@ import os
 
 # Create your models here.
 
+
 class Artist(models.Model):
     name = models.CharField(max_length=200)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -13,7 +14,8 @@ class Artist(models.Model):
         return self.name
 
     class Meta:
-        ordering = ['name']
+        ordering = ["name"]
+
 
 class Genre(models.Model):
     name = models.CharField(max_length=100)
@@ -23,14 +25,15 @@ class Genre(models.Model):
         return self.name
 
     class Meta:
-        ordering = ['name']
+        ordering = ["name"]
+
 
 class Album(models.Model):
     title = models.CharField(max_length=200)
-    artist = models.ForeignKey(Artist, on_delete=models.CASCADE, related_name='albums')
+    artist = models.ForeignKey(Artist, on_delete=models.CASCADE, related_name="albums")
     genre = models.ForeignKey(Genre, on_delete=models.SET_NULL, null=True, blank=True)
     release_date = models.DateField(null=True, blank=True)
-    cover_art = models.ImageField(upload_to='album_covers/', null=True, blank=True)
+    cover_art = models.ImageField(upload_to="album_covers/", null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -38,12 +41,13 @@ class Album(models.Model):
         return f"{self.title} - {self.artist.name}"
 
     class Meta:
-        ordering = ['title']
+        ordering = ["title"]
+
 
 class Track(models.Model):
     title = models.CharField(max_length=200)
-    artist = models.ForeignKey(Artist, on_delete=models.CASCADE, related_name='tracks')
-    album = models.ForeignKey(Album, on_delete=models.CASCADE, related_name='tracks')
+    artist = models.ForeignKey(Artist, on_delete=models.CASCADE, related_name="tracks")
+    album = models.ForeignKey(Album, on_delete=models.CASCADE, related_name="tracks")
     genre = models.ForeignKey(Genre, on_delete=models.SET_NULL, null=True, blank=True)
     file_path = models.CharField(max_length=1000)  # Store the absolute path to the file
     duration = models.DurationField(null=True, blank=True)
@@ -57,14 +61,14 @@ class Track(models.Model):
 
     def get_file_extension(self):
         return os.path.splitext(self.file_path)[1]
-        
+
     def check_file_exists(self):
         """Check if the file still exists and update the is_valid flag"""
         exists = os.path.exists(self.file_path)
         if self.is_valid != exists:
             self.is_valid = exists
-            self.save(update_fields=['is_valid'])
+            self.save(update_fields=["is_valid"])
         return exists
 
     class Meta:
-        ordering = ['album', 'track_number', 'title']
+        ordering = ["album", "track_number", "title"]
