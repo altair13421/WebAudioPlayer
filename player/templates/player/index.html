@@ -1,0 +1,321 @@
+{% extends 'player/base.html' %}
+
+{% block title %}Music Player - Home{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="music-player">
+            <div class="player-controls mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 id="now-playing">No track selected</h5>
+                    <div class="controls">
+                        <button class="btn btn-outline-primary" id="prev-track">
+                            <i class="fas fa-step-backward"></i>
+                        </button>
+                        <button class="btn btn-primary" id="play-pause">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <button class="btn btn-outline-primary" id="next-track">
+                            <i class="fas fa-step-forward"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="progress">
+                    <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                </div>
+                <div class="d-flex justify-content-between mt-2">
+                    <span id="current-time">0:00</span>
+                    <span id="duration">0:00</span>
+                </div>
+            </div>
+
+            <div class="track-list">
+                {% for track in tracks %}
+                <div class="track-item" data-track-id="{{ track.id }}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">{{ track.title }}</h6>
+                            <small class="text-muted">{{ track.artist.name }} - {{ track.album.title }}</small>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-outline-primary edit-track" data-track-id="{{ track.id }}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger remove-track" data-track-id="{{ track.id }}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-center">No tracks found. Scan a directory to add music.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Scan Music Directory</h5>
+                <form action="{% url 'scan_directory' %}" method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="directory_path" class="form-label">Directory Path</label>
+                        <input type="text" class="form-control" id="directory_path" name="directory_path" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Scan Directory</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Track Modal -->
+<div class="modal fade" id="editTrackModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Track</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editTrackForm">
+                    <input type="hidden" id="track_id">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Title</label>
+                        <input type="text" class="form-control" id="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="artist" class="form-label">Artist</label>
+                        <input type="text" class="form-control" id="artist" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="album" class="form-label">Album</label>
+                        <input type="text" class="form-control" id="album" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="genre" class="form-label">Genre</label>
+                        <input type="text" class="form-control" id="genre">
+                    </div>
+                    <div class="mb-3">
+                        <label for="track_number" class="form-label">Track Number</label>
+                        <input type="number" class="form-control" id="track_number">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="saveTrackChanges">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Alert -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    <div id="errorAlert" class="toast align-items-center text-white bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body" id="errorMessage">
+                Error message here
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentTrack = null;
+let audio = new Audio();
+let isPlaying = false;
+let currentTrackIndex = -1;
+const tracks = Array.from(document.querySelectorAll('.track-item'));
+
+function formatTime(seconds) {
+    const minutes = Math.floor(seconds / 60);
+    seconds = Math.floor(seconds % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
+function updateProgress() {
+    const progress = (audio.currentTime / audio.duration) * 100;
+    document.querySelector('.progress-bar').style.width = `${progress}%`;
+    document.getElementById('current-time').textContent = formatTime(audio.currentTime);
+}
+
+function showError(message) {
+    const errorAlert = document.getElementById('errorAlert');
+    const errorMessage = document.getElementById('errorMessage');
+    errorMessage.textContent = message;
+    const toast = new bootstrap.Toast(errorAlert);
+    toast.show();
+}
+
+function playTrack(trackId) {
+    if (currentTrack === trackId) {
+        if (isPlaying) {
+            audio.pause();
+            document.querySelector('#play-pause i').classList.replace('fa-pause', 'fa-play');
+        } else {
+            audio.play().catch(error => {
+                showError('Error playing track: ' + error.message);
+            });
+            document.querySelector('#play-pause i').classList.replace('fa-play', 'fa-pause');
+        }
+        isPlaying = !isPlaying;
+    } else {
+        currentTrack = trackId;
+        audio.src = `/track/${trackId}/play/`;
+        audio.play().catch(error => {
+            showError('Error playing track: ' + error.message);
+            document.querySelector('#play-pause i').classList.replace('fa-pause', 'fa-play');
+            isPlaying = false;
+        });
+        isPlaying = true;
+        document.querySelector('#play-pause i').classList.replace('fa-play', 'fa-pause');
+        
+        // Update now playing info
+        fetch(`/track/${trackId}/info/`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Track not found');
+                }
+                return response.json();
+            })
+            .then(data => {
+                document.getElementById('now-playing').textContent = `${data.title} - ${data.artist}`;
+            })
+            .catch(error => {
+                showError(error.message);
+                document.querySelector('#play-pause i').classList.replace('fa-pause', 'fa-play');
+                isPlaying = false;
+            });
+    }
+}
+
+// Event Listeners
+document.querySelectorAll('.track-item').forEach((track, index) => {
+    track.addEventListener('click', () => {
+        const trackId = track.dataset.trackId;
+        currentTrackIndex = index;
+        playTrack(trackId);
+    });
+});
+
+document.getElementById('play-pause').addEventListener('click', () => {
+    if (currentTrack) {
+        playTrack(currentTrack);
+    }
+});
+
+document.getElementById('prev-track').addEventListener('click', () => {
+    if (currentTrackIndex > 0) {
+        currentTrackIndex--;
+        const trackId = tracks[currentTrackIndex].dataset.trackId;
+        playTrack(trackId);
+    }
+});
+
+document.getElementById('next-track').addEventListener('click', () => {
+    if (currentTrackIndex < tracks.length - 1) {
+        currentTrackIndex++;
+        const trackId = tracks[currentTrackIndex].dataset.trackId;
+        playTrack(trackId);
+    }
+});
+
+document.querySelector('.progress').addEventListener('click', (e) => {
+    const rect = e.target.getBoundingClientRect();
+    const pos = (e.clientX - rect.left) / rect.width;
+    audio.currentTime = pos * audio.duration;
+});
+
+audio.addEventListener('timeupdate', updateProgress);
+audio.addEventListener('loadedmetadata', () => {
+    document.getElementById('duration').textContent = formatTime(audio.duration);
+});
+
+// Edit Track Functionality
+document.querySelectorAll('.edit-track').forEach(button => {
+    button.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const trackId = button.dataset.trackId;
+        fetch(`/track/${trackId}/info/`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Track not found');
+                }
+                return response.json();
+            })
+            .then(data => {
+                document.getElementById('track_id').value = data.id;
+                document.getElementById('title').value = data.title;
+                document.getElementById('artist').value = data.artist;
+                document.getElementById('album').value = data.album;
+                document.getElementById('genre').value = data.genre || '';
+                document.getElementById('track_number').value = data.track_number || '';
+                
+                new bootstrap.Modal(document.getElementById('editTrackModal')).show();
+            })
+            .catch(error => {
+                showError(error.message);
+            });
+    });
+});
+
+document.getElementById('saveTrackChanges').addEventListener('click', () => {
+    const trackId = document.getElementById('track_id').value;
+    const formData = new FormData();
+    formData.append('title', document.getElementById('title').value);
+    formData.append('artist', document.getElementById('artist').value);
+    formData.append('album', document.getElementById('album').value);
+    formData.append('genre', document.getElementById('genre').value);
+    formData.append('track_number', document.getElementById('track_number').value);
+
+    fetch(`/track/${trackId}/update/`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            location.reload();
+        }
+    })
+    .catch(error => {
+        showError('Error updating track: ' + error.message);
+    });
+});
+
+// Remove Track Functionality
+document.querySelectorAll('.remove-track').forEach(button => {
+    button.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (confirm('Are you sure you want to remove this track from the library?')) {
+            const trackId = button.dataset.trackId;
+            fetch(`/track/${trackId}/remove/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                showError('Error removing track: ' + error.message);
+            });
+        }
+    });
+});
+</script>
+{% endblock %} 
