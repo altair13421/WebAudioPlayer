@@ -1,5 +1,4 @@
 from django.db import models
-from django.core.validators import FileExtensionValidator
 import os
 
 # Create your models here.
@@ -48,13 +47,12 @@ class Track(models.Model):
     title = models.CharField(max_length=200)
     artist = models.ForeignKey(Artist, on_delete=models.CASCADE, related_name="tracks")
     album = models.ForeignKey(Album, on_delete=models.CASCADE, related_name="tracks")
-    genre = models.ForeignKey(Genre, on_delete=models.SET_NULL, null=True, blank=True)
-    file_path = models.CharField(max_length=1000)  # Store the absolute path to the file
-    duration = models.DurationField(null=True, blank=True)
+    genre = models.ManyToManyField(Genre)
+    file_path = models.FilePathField(max_length=1000)
+    duration = models.FloatField(default=0)
     track_number = models.PositiveIntegerField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    is_valid = models.BooleanField(default=True)  # Flag to track if file still exists
+    created_at = models.DateField(null=True)
+    is_valid = models.BooleanField(default=True) # Flag to track if file still exists
 
     def __str__(self):
         return f"{self.title} - {self.artist.name}"

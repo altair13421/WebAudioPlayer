@@ -1,3 +1,4 @@
+import sys
 from django.shortcuts import redirect, get_object_or_404
 from django.http import JsonResponse, FileResponse
 from django.contrib import messages
@@ -59,51 +60,49 @@ class ScanDirectoryView(View):
 
                         # Try to get metadata
                         if isinstance(audio, EasyID3):
-                            title = audio.get("title", [file])[0]
-                            artist_name = audio.get("artist", ["Unknown Artist"])[0]
-                            album_title = audio.get("album", ["Unknown Album"])[0]
-                            genre_name = audio.get("genre", ["Unknown"])[0]
-                        else:
-                            title = file
-                            artist_name = "Unknown Artist"
-                            album_title = "Unknown Album"
-                            genre_name = "Unknown"
+                            # ['TIT2', 'TPE1', 'TRCK', 'TALB', 'TPOS', 'TDRC', 'TCON', 'POPM:', 'TPE2', 'TSRC', 'TSSE', 'TENC', 'WOAS', 'TCOP', 'COMM::XXX', 'APIC:Cover']
+                            title = audio.get("TIT2", "").text
+                            artist_name = audio.get("TPE1", "").text
+                            album_title = audio.get("TALB", "").text
+                            genres = audio.get("TCON", "").text.split()
+                            cover_art = audio.get("APIC:Cover", "").data
+
 
                         # Get or create artist
-                        artist, _ = Artist.objects.get_or_create(name=artist_name)
+                        # artist, _ = Artist.objects.get_or_create(name=artist_name)
 
                         # Get or create genre
-                        genre, _ = Genre.objects.get_or_create(name=genre_name)
+                        # genre, _ = Genre.objects.get_or_create(name=genre_name)
 
                         # Get or create album
-                        album, _ = Album.objects.get_or_create(
-                            title=album_title, artist=artist, defaults={"genre": genre}
-                        )
-
+                        # album, _ = Album.objects.get_or_create(
+                        #     title=album_title, artist=artist, defaults={"genre": genre}
+                        # )
                         # Create track if it doesn't exist
-                        track, created = Track.objects.get_or_create(
-                            title=title,
-                            artist=artist,
-                            album=album,
-                            defaults={
-                                "genre": genre,
-                                "file_path": file_path,
-                                "duration": (
-                                    audio.info.length
-                                    if hasattr(audio.info, "length")
-                                    else None
-                                ),
-                                "is_valid": True,
-                            },
-                        )
 
-                        if created:
-                            new_tracks += 1
+                        # track, created = Track.objects.get_or_create(
+                        #     title=title,
+                        #     artist=artist,
+                        #     album=album,
+                        #     defaults={
+                        #         "genre": genre,
+                        #         "file_path": file_path,
+                        #         "duration": (
+                        #             audio.info.length
+                        #             if hasattr(audio.info, "length")
+                        #             else None
+                        #         ),
+                        #         "is_valid": True,
+                        #     },
+                        # )
+                        # if created:
+                            # new_tracks += 1
                         scanned_files += 1
 
                     except Exception as e:
                         ic(e)
                         messages.warning(request, f"Error processing {file}: {str(e)}")
+                        return redirect("index")
 
         messages.success(
             request, f"Scanned {scanned_files} files, added {new_tracks} new tracks"
@@ -133,7 +132,7 @@ class PlayTrackView(View):
 
 
 class UpdateTrackView(View):
-    def post(self, request, track_id, *args, **kwargs):
+    def post(self, request, track_id, *args, **kwargs) -> JsonResponse:
         track = get_object_or_404(Track, id=track_id)
 
         track.title = request.POST.get("title", track.title)
@@ -164,7 +163,7 @@ class UpdateTrackView(View):
 
 
 class GetTrackInfoView(View):
-    def get(self, request, track_id, *args, **kwargs):
+    def get(self, request, track_id, *args, **kwargs) -> JsonResponse:
         track = get_object_or_404(Track, id=track_id)
 
         # Check if file exists
@@ -185,7 +184,7 @@ class GetTrackInfoView(View):
 
 
 class RemoveTrackView(View):
-    def post(self, request, track_id, *args, **kwargs):
+    def post(self, request, track_id, *args, **kwargs) -> JsonResponse:
         track = get_object_or_404(Track, id=track_id)
         track.delete()
         return JsonResponse({"status": "success"})

@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'player',
+    'django_bootstrap5',
 ]
 
 MIDDLEWARE = [
@@ -127,3 +128,11 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Bootstrap 5 Settings
+BOOTSTRAP5 = {
+    'theme_url': 'https://bootswatch.com/5/darkly/bootstrap.min.css',
+    'javascript_in_head': True,
+    'required_css_class': 'required',
+    'set_placeholder': False,
+}

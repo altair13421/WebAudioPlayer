@@ -1,4 +1,5 @@
 {% extends 'player/base.html' %}
+{% load django_bootstrap5 %}
 
 {% block title %}Music Player - Home{% endblock %}
 
@@ -30,27 +31,112 @@
                 </div>
             </div>
 
-            <div class="track-list">
-                {% for track in tracks %}
-                <div class="track-item" data-track-id="{{ track.id }}">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="mb-0">{{ track.title }}</h6>
-                            <small class="text-muted">{{ track.artist.name }} - {{ track.album.title }}</small>
+            <ul class="nav nav-tabs" id="libraryTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="tracks-tab" data-bs-toggle="tab" data-bs-target="#tracks" type="button" role="tab">
+                        <i class="fas fa-music me-2"></i>Tracks
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="artists-tab" data-bs-toggle="tab" data-bs-target="#artists" type="button" role="tab">
+                        <i class="fas fa-users me-2"></i>Artists
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="albums-tab" data-bs-toggle="tab" data-bs-target="#albums" type="button" role="tab">
+                        <i class="fas fa-compact-disc me-2"></i>Albums
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="folders-tab" data-bs-toggle="tab" data-bs-target="#folders" type="button" role="tab">
+                        <i class="fas fa-folder me-2"></i>Folders
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="libraryTabsContent">
+                <!-- Tracks Tab -->
+                <div class="tab-pane fade show active" id="tracks" role="tabpanel">
+                    <div class="track-list">
+                        {% for track in tracks %}
+                        <div class="track-item" data-track-id="{{ track.id }}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-0">{{ track.title }}</h6>
+                                    <small class="text-muted">{{ track.artist.name }} - {{ track.album.title }}</small>
+                                </div>
+                                <div>
+                                    <button class="btn btn-sm btn-outline-primary edit-track" data-track-id="{{ track.id }}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger remove-track" data-track-id="{{ track.id }}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <button class="btn btn-sm btn-outline-primary edit-track" data-track-id="{{ track.id }}">
-                                <i class="fas fa-edit"></i>
+                        {% empty %}
+                        <p class="text-center">No tracks found. Scan a directory to add music.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Artists Tab -->
+                <div class="tab-pane fade" id="artists" role="tabpanel">
+                    <div class="list-group">
+                        {% for artist in artists %}
+                        <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">{{ artist.name }}</h6>
+                                <small class="text-muted">{{ artist.tracks.count }} tracks</small>
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary" onclick="filterByArtist({{ artist.id }})">
+                                <i class="fas fa-filter"></i>
                             </button>
-                            <button class="btn btn-sm btn-outline-danger remove-track" data-track-id="{{ track.id }}">
-                                <i class="fas fa-trash"></i>
+                        </div>
+                        {% empty %}
+                        <p class="text-center">No artists found.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Albums Tab -->
+                <div class="tab-pane fade" id="albums" role="tabpanel">
+                    <div class="list-group">
+                        {% for album in albums %}
+                        <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">{{ album.title }}</h6>
+                                <small class="text-muted">{{ album.artist.name }} - {{ album.tracks.count }} tracks</small>
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary" onclick="filterByAlbum({{ album.id }})">
+                                <i class="fas fa-filter"></i>
                             </button>
+                        </div>
+                        {% empty %}
+                        <p class="text-center">No albums found.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Folders Tab -->
+                <div class="tab-pane fade" id="folders" role="tabpanel">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Scan Music Directory</h5>
+                            <form action="{% url 'scan_directory' %}" method="post">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label for="directory_path" class="form-label">Directory Path</label>
+                                    <input type="text" class="form-control" id="directory_path" name="directory_path" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-folder-open me-2"></i>Scan Directory
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>
-                {% empty %}
-                <p class="text-center">No tracks found. Scan a directory to add music.</p>
-                {% endfor %}
             </div>
         </div>
     </div>
@@ -58,15 +144,10 @@
     <div class="col-md-4">
         <div class="card">
             <div class="card-body">
-                <h5 class="card-title">Scan Music Directory</h5>
-                <form action="{% url 'scan_directory' %}" method="post">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="directory_path" class="form-label">Directory Path</label>
-                        <input type="text" class="form-control" id="directory_path" name="directory_path" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Scan Directory</button>
-                </form>
+                <h5 class="card-title">Now Playing</h5>
+                <div id="now-playing-info" class="text-center">
+                    <p class="text-muted">No track selected</p>
+                </div>
             </div>
         </div>
     </div>
@@ -75,10 +156,10 @@
 <!-- Edit Track Modal -->
 <div class="modal fade" id="editTrackModal" tabindex="-1">
     <div class="modal-dialog">
-        <div class="modal-content">
+        <div class="modal-content bg-dark">
             <div class="modal-header">
                 <h5 class="modal-title">Edit Track</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="editTrackForm">
@@ -187,6 +268,10 @@ function playTrack(trackId) {
             })
             .then(data => {
                 document.getElementById('now-playing').textContent = `${data.title} - ${data.artist}`;
+                document.getElementById('now-playing-info').innerHTML = `
+                    <h6>${data.title}</h6>
+                    <p class="text-muted">${data.artist} - ${data.album}</p>
+                `;
             })
             .catch(error => {
                 showError(error.message);
@@ -317,5 +402,16 @@ document.querySelectorAll('.remove-track').forEach(button => {
         }
     });
 });
+
+// Filter Functions
+function filterByArtist(artistId) {
+    // Implement artist filtering
+    console.log('Filtering by artist:', artistId);
+}
+
+function filterByAlbum(albumId) {
+    // Implement album filtering
+    console.log('Filtering by album:', albumId);
+}
 </script>
 {% endblock %} 
