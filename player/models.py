@@ -30,10 +30,9 @@ class Genre(models.Model):
 class Album(models.Model):
     title = models.CharField(max_length=200)
     artist = models.ForeignKey(Artist, on_delete=models.CASCADE, related_name="albums")
-    genre = models.ForeignKey(Genre, on_delete=models.SET_NULL, null=True, blank=True)
     release_date = models.DateField(null=True, blank=True)
-    cover_art = models.ImageField(upload_to="album_covers/", null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    cover_art = models.FilePathField(null=True, blank=True)
+    release = models.DateField(blank=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
@@ -45,10 +44,10 @@ class Album(models.Model):
 
 class Track(models.Model):
     title = models.CharField(max_length=200)
-    artist = models.ForeignKey(Artist, on_delete=models.CASCADE, related_name="tracks")
+    artist = models.ManyToManyField(Artist, related_name="tracks")
     album = models.ForeignKey(Album, on_delete=models.CASCADE, related_name="tracks")
-    genre = models.ManyToManyField(Genre)
-    file_path = models.FilePathField(max_length=1000)
+    genre = models.ManyToManyField(Genre, related_name="tracks")
+    file_path = models.FilePathField(null=True, blank=True)
     duration = models.FloatField(default=0)
     track_number = models.PositiveIntegerField(null=True, blank=True)
     created_at = models.DateField(null=True)
