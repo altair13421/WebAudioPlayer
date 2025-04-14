@@ -31,7 +31,7 @@ class IndexView(ListView):
 
     def get_queryset(self):
         # Check file existence for all tracks
-        tracks = Track.objects.all().select_related("artist", "album", "genre")
+        tracks = Track.objects.all().select_related("album")
         for track in tracks:
             track.check_file_exists()
 
@@ -67,44 +67,43 @@ class ScanDirectoryView(View):
                         audio = MutagenFile(file_path)
                         if audio is None:
                             continue
-
-                        # Try to get metadata
-                        if isinstance(audio, EasyID3):
-                            # ['TIT2', 'TPE1', 'TRCK', 'TALB', 'TPOS', 'TDRC', 'TCON', 'POPM:', 'TPE2', 'TSRC', 'TSSE', 'TENC', 'WOAS', 'TCOP', 'COMM::XXX', 'APIC:Cover']
-                            title_mtg = audio.get("TIT2", "")
-                            title = title_mtg.text[0] if title_mtg != "" else ""
-                            artist_name_mtg = audio.get("TPE1", "")
-                            artist_names = (
-                                artist_name_mtg.text[0] if artist_name_mtg != "" else ""
-                            )
-                            orig_artist_mtg = audio.get("TPE2", "")
-                            orig_artist_name = (
-                                orig_artist_mtg.text[0] if orig_artist_mtg != "" else ""
-                            )
-                            album_title_mtg = audio.get("TALB", "")
-                            album = (
-                                album_title_mtg.text[0] if album_title_mtg != "" else ""
-                            )
-                            genres_mtg = audio.get("TCON", "")
-                            genres = (
-                                genres_mtg.text[0].split() if genres_mtg != "" else ""
-                            )
-                            cover_art_mtg = audio.get("APIC:Cover", "")
-                            cover_art = (
-                                cover_art_mtg.data if cover_art_mtg != "" else ""
-                            )
-                            date_mtg = audio.get("TDRC", "")
-                            release_date = date_mtg.text[0] if date_mtg != "" else ""
+                        # ['TIT2', 'TPE1', 'TRCK', 'TALB', 'TPOS', 'TDRC', 'TCON', 'POPM:', 
+                        # 'TPE2', 'TSRC', 'TSSE', 'TENC', 'WOAS', 'TCOP', 'COMM::XXX', 'APIC:Cover']
+                        title_mtg = audio.get("TIT2", "")
+                        title = title_mtg.text[0] if title_mtg != "" else ""
+                        artist_name_mtg = audio.get("TPE1", "")
+                        artist_names = (
+                            artist_name_mtg.text[0] if artist_name_mtg != "" else ""
+                        )
+                        orig_artist_mtg = audio.get("TPE2", "")
+                        orig_artist_name = (
+                            orig_artist_mtg.text[0] if orig_artist_mtg != "" else ""
+                        )
+                        album_title_mtg = audio.get("TALB", "")
+                        album = (
+                            album_title_mtg.text[0] if album_title_mtg != "" else ""
+                        )
+                        genres_mtg = audio.get("TCON", "")
+                        genres = (
+                            genres_mtg.text[0].split() if genres_mtg != "" else ""
+                        )
+                        cover_art_mtg = audio.get("APIC:Cover", "")
+                        cover_art = (
+                            cover_art_mtg.data if cover_art_mtg != "" else ""
+                        )
+                        date_mtg = audio.get("TDRC", "")
+                        release_date = date_mtg.text[0] if date_mtg != "" else "0000-00-00"
 
                         # Get or create artist
+                        artist_list = []
                         if "/" in artist_names:
-                            artist_list = []
                             for artist_name in artist_names.split("/"):
                                 artist, _ = Artist.objects.get_or_create(name=artist_name)
                                 artist_list.append(artist)
                             artist = Artist.objects.get(name=orig_artist_name)
                         else:
                             artist, _ = Artist.objects.get_or_create(name=artist_names)
+                            artist_list.append(artist)
 
                         # Get or create genre
                         genre_list = []
@@ -114,16 +113,14 @@ class ScanDirectoryView(View):
 
                         # Get or create album
                         album, _ = Album.objects.get_or_create(
-                            title=album, artist=artist, cover_art=cover_art, defaults={"release": release_date}
+                            title=album, artist=artist, cover_art=cover_art
                         )
                         # Create track if it doesn't exist
 
                         track, created = Track.objects.get_or_create(
-                        #     title=title,
-                        #     artist=artist,
+                            title=title,
                             album=album,
                             defaults={
-                                # "genre": genre,
                                 "file_path": file_path,
                                 "duration": (
                                     audio.info.length
