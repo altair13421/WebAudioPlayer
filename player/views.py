@@ -17,7 +17,6 @@ import mimetypes
 from .models import Artist, Album, Genre, Track
 from .forms import FolderSelectForm
 
-
 def album_art_writer(artist, album, file_data):
     file_route = settings.MEDIA_ROOT / artist / f"{album}.png"
     with open(file_route, "wb") as file_write:
@@ -65,7 +64,7 @@ class ScanDirectoryView(View):
                     file_path = os.path.join(root, file)
                     try:
                         audio = MutagenFile(file_path)
-                        if audio is None:
+                        if audio is None or not isinstance(audio, EasyID3):
                             continue
                         # ['TIT2', 'TPE1', 'TRCK', 'TALB', 'TPOS', 'TDRC', 'TCON', 'POPM:',
                         # 'TPE2', 'TSRC', 'TSSE', 'TENC', 'WOAS', 'TCOP', 'COMM::XXX', 'APIC:Cover']
