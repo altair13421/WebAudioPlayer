@@ -67,7 +67,7 @@ class ScanDirectoryView(View):
                         audio = MutagenFile(file_path)
                         if audio is None:
                             continue
-                        # ['TIT2', 'TPE1', 'TRCK', 'TALB', 'TPOS', 'TDRC', 'TCON', 'POPM:', 
+                        # ['TIT2', 'TPE1', 'TRCK', 'TALB', 'TPOS', 'TDRC', 'TCON', 'POPM:',
                         # 'TPE2', 'TSRC', 'TSSE', 'TENC', 'WOAS', 'TCOP', 'COMM::XXX', 'APIC:Cover']
                         title_mtg = audio.get("TIT2", "")
                         title = title_mtg.text[0] if title_mtg != "" else ""
@@ -80,25 +80,23 @@ class ScanDirectoryView(View):
                             orig_artist_mtg.text[0] if orig_artist_mtg != "" else ""
                         )
                         album_title_mtg = audio.get("TALB", "")
-                        album = (
-                            album_title_mtg.text[0] if album_title_mtg != "" else ""
-                        )
+                        album = album_title_mtg.text[0] if album_title_mtg != "" else ""
                         genres_mtg = audio.get("TCON", "")
-                        genres = (
-                            genres_mtg.text[0].split() if genres_mtg != "" else ""
-                        )
+                        genres = genres_mtg.text[0].split() if genres_mtg != "" else ""
                         cover_art_mtg = audio.get("APIC:Cover", "")
-                        cover_art = (
-                            cover_art_mtg.data if cover_art_mtg != "" else ""
-                        )
+                        cover_art = cover_art_mtg.data if cover_art_mtg != "" else ""
                         date_mtg = audio.get("TDRC", "")
-                        release_date = date_mtg.text[0] if date_mtg != "" else "0000-00-00"
+                        release_date = (
+                            date_mtg.text[0] if date_mtg != "" else "0000-00-00"
+                        )
 
                         # Get or create artist
                         artist_list = []
                         if "/" in artist_names:
                             for artist_name in artist_names.split("/"):
-                                artist, _ = Artist.objects.get_or_create(name=artist_name)
+                                artist, _ = Artist.objects.get_or_create(
+                                    name=artist_name
+                                )
                                 artist_list.append(artist)
                             artist = Artist.objects.get(name=orig_artist_name)
                         else:
