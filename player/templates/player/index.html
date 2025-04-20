@@ -240,21 +240,48 @@ function playTrack(trackId) {
         if (isPlaying) {
             audio.pause();
             document.querySelector('#play-pause i').classList.replace('fa-pause', 'fa-play');
+            isPlaying = false;
         } else {
             audio.play().catch(error => {
                 showError('Error playing track: ' + error.message);
             });
             document.querySelector('#play-pause i').classList.replace('fa-play', 'fa-pause');
+            isPlaying = true;
         }
-        isPlaying = !isPlaying;
     } else {
         currentTrack = trackId;
-        audio.src = `/track/${trackId}/play/`;
-        audio.play().catch(error => {
-            showError('Error playing track: ' + error.message);
+        
+        // Pause and reset current audio if it exists
+        if (audio) {
+            audio.pause();
+            audio.removeAttribute('src');
+            audio.load();
+        }
+        
+        // Create new Audio object
+        audio = new Audio();
+        
+        // Add event listeners before setting source
+        audio.addEventListener('error', (e) => {
+            console.error('Audio error:', e);
+            showError('Error loading audio file: ' + (e.target.error ? e.target.error.message : 'Unknown error'));
             document.querySelector('#play-pause i').classList.replace('fa-pause', 'fa-play');
             isPlaying = false;
         });
+
+        audio.addEventListener('canplay', () => {
+            audio.play().catch(error => {
+                showError('Error playing track: ' + error.message);
+                document.querySelector('#play-pause i').classList.replace('fa-pause', 'fa-play');
+                isPlaying = false;
+            });
+        });
+
+        // Set source and load
+        const trackUrl = `/track/${trackId}/play/`;
+        audio.src = trackUrl;
+        audio.load();
+        
         isPlaying = true;
         document.querySelector('#play-pause i').classList.replace('fa-play', 'fa-pause');
         

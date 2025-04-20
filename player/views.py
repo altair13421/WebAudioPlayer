@@ -13,9 +13,12 @@ from mutagen.easyid3 import EasyID3
 from pathlib import Path
 from icecream import ic
 import mimetypes
+from urllib.parse import quote
+from django.utils.encoding import smart_str
 
 from .models import Artist, Album, Genre, Track
 from .forms import FolderSelectForm
+
 
 def album_art_writer(artist, album, file_data):
     file_route = settings.MEDIA_ROOT / artist / f"{album}.png"
@@ -64,7 +67,7 @@ class ScanDirectoryView(View):
                     file_path = os.path.join(root, file)
                     try:
                         audio = MutagenFile(file_path)
-                        if audio is None or not isinstance(audio, EasyID3):
+                        if audio is None:
                             continue
                         # ['TIT2', 'TPE1', 'TRCK', 'TALB', 'TPOS', 'TDRC', 'TCON', 'POPM:',
                         # 'TPE2', 'TSRC', 'TSSE', 'TENC', 'WOAS', 'TCOP', 'COMM::XXX', 'APIC:Cover']
@@ -118,7 +121,7 @@ class ScanDirectoryView(View):
                             title=title,
                             album=album,
                             defaults={
-                                "file_path": file_path,
+                                "file_path": f"{file_path}",
                                 "duration": (
                                     audio.info.length
                                     if hasattr(audio.info, "length")
@@ -155,17 +158,43 @@ class PlayTrackView(View):
         if not track.check_file_exists():
             return JsonResponse({"error": "File not found"}, status=404)
 
-        # Get the MIME type
-        mime_type, _ = mimetypes.guess_type(track.file_path)
-        if not mime_type:
-            mime_type = "application/octet-stream"
+        try:
+            # Convert the file path to a Path object for better handling
+            file_path = Path(track.file_path)
 
-        # Stream the file
-        response = FileResponse(open(track.file_path, "rb"), content_type=mime_type)
-        response["Content-Disposition"] = (
-            f'inline; filename="{os.path.basename(track.file_path)}"'
-        )
-        return response
+            # Verify the file exists
+            if not file_path.exists():
+                return JsonResponse({"error": "File not found"}, status=404)
+
+            # Get the MIME type
+            mime_type, _ = mimetypes.guess_type(str(file_path))
+            if not mime_type:
+                mime_type = "audio/mpeg"  # Default to audio/mpeg for MP3 files
+
+            # Open and stream the file
+            response = FileResponse(
+                open(file_path, "rb"), content_type=mime_type, as_attachment=False
+            )
+
+            # Set headers for proper streaming
+            response["Accept-Ranges"] = "bytes"
+            response["Content-Length"] = file_path.stat().st_size
+            response["Cache-Control"] = "no-cache"
+
+            # Set the Content-Disposition header with proper encoding
+            filename = file_path.name
+            encoded_filename = quote(filename)
+            response["Content-Disposition"] = f'inline; filename="{encoded_filename}"'
+            ic(
+                response["Accept-Ranges"],
+                response["Content-Length"],
+                response["Cache-Control"],
+                response["Content-Disposition"],
+            )
+            return response
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
 
 
 class UpdateTrackView(View):
@@ -211,7 +240,7 @@ class GetTrackInfoView(View):
             {
                 "id": track.id,
                 "title": track.title,
-                "artist": track.artist.name,
+                "artists": track.artist.name,
                 "album": track.album.title,
                 "genre": track.genre.name if track.genre else None,
                 "duration": str(track.duration) if track.duration else None,

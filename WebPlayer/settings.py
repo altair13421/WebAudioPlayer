@@ -136,3 +136,21 @@ BOOTSTRAP5 = {
     'required_css_class': 'required',
     'set_placeholder': False,
 }
+
+# Add to your settings.py
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+SECURE_BROWSER_XSS_FILTER = True
+
+# Add or update these settings
+FILE_UPLOAD_HANDLERS = [
+    'django.core.files.uploadhandler.MemoryFileUploadHandler',
+    'django.core.files.uploadhandler.TemporaryFileUploadHandler',
+]
+
+# If you're using whitenoise for static files, add this
+WHITENOISE_ALLOW_ALL_ORIGINS = True
+
+# Security settings
+SECURE_CONTENT_TYPE_NOSNIFF = True
