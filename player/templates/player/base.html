@@ -81,6 +81,82 @@
             border-color: var(--bs-primary);
             color: var(--bs-white);
         }
+        .now-playing-details {
+            padding: 1rem;
+        }
+        
+        .track-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .artist-album {
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        
+        .track-metadata {
+            background: var(--bs-gray-800);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .metadata-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .progress-container {
+            margin: 10px 0;
+        }
+
+        .progress {
+            height: 6px;
+            cursor: pointer;
+            transition: height 0.2s;
+            background-color: var(--bs-gray-700);
+        }
+
+        .progress:hover {
+            height: 8px;
+        }
+
+        .time-display {
+            font-size: 0.8rem;
+            color: var(--bs-gray-500);
+        }
+
+        .volume-control {
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .volume-control:hover {
+            opacity: 1;
+        }
+
+        .volume-control .btn-link {
+            color: var(--bs-gray-400);
+            text-decoration: none;
+        }
+
+        .volume-control .btn-link:hover {
+            color: var(--bs-gray-200);
+        }
+
+        #volume-slider {
+            min-width: 80px;
+        }
+
+        #volume-slider .progress-bar {
+            transition: width 0.1s ease;
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>

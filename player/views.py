@@ -15,6 +15,7 @@ from icecream import ic
 import mimetypes
 from urllib.parse import quote
 from django.utils.encoding import smart_str
+import time
 
 from .models import Artist, Album, Genre, Track
 from .forms import FolderSelectForm
@@ -236,17 +237,33 @@ class GetTrackInfoView(View):
         if not track.check_file_exists():
             return JsonResponse({"error": "File not found"}, status=404)
 
-        return JsonResponse(
-            {
+        try:
+            # Get audio metadata using mutagen
+            audio = MutagenFile(track.file_path)
+            
+            # Calculate duration in a readable format
+            duration = None
+            if hasattr(audio.info, 'length'):
+                duration = time.strftime('%M:%S', time.gmtime(audio.info.length))
+
+            # Get bitrate if available
+            bitrate = None
+            if hasattr(audio.info, 'bitrate'):
+                bitrate = f"{audio.info.bitrate // 1000}kbps"
+
+            return JsonResponse({
                 "id": track.id,
                 "title": track.title,
-                "artists": track.artist.name,
+                "artist": ", ".join(artist.name for artist in track.artist.all()),
                 "album": track.album.title,
-                "genre": track.genre.name if track.genre else None,
-                "duration": str(track.duration) if track.duration else None,
+                "genre": ", ".join(genre.name for genre in track.genre.all()),
+                "duration": duration,
+                "bitrate": bitrate,
                 "track_number": track.track_number,
-            }
-        )
+                "file_format": track.get_file_extension().lstrip('.').upper()
+            })
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
 
 
 class RemoveTrackView(View):
