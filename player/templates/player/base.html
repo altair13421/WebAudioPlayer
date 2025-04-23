@@ -151,11 +151,22 @@
         }
 
         #volume-slider {
-            min-width: 80px;
+            cursor: pointer;
+            background-color: var(--bs-gray-700);
         }
 
         #volume-slider .progress-bar {
+            background-color: var(--bs-primary);
             transition: width 0.1s ease;
+        }
+
+        .progress {
+            position: relative;
+        }
+
+        .progress-bar {
+            position: absolute;
+            height: 100%;
         }
     </style>
     {% block extra_css %}{% endblock %}

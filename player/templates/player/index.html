@@ -39,8 +39,8 @@
                     <button class="btn btn-link btn-sm text-muted p-0 me-2" id="mute-toggle">
                         <i class="fas fa-volume-up"></i>
                     </button>
-                    <div class="progress" id="volume-slider" style="height: 6px; flex-grow: 1; max-width: 100px; cursor: pointer;">
-                        <div class="progress-bar bg-secondary" role="progressbar" style="width: 100%"></div>
+                    <div class="progress" id="volume-slider" style="height: 6px; flex-grow: 1; max-width: 100px;">
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: 100%"></div>
                     </div>
                 </div>
             </div>
@@ -258,7 +258,7 @@ let currentTrack = null;
 let audio = new Audio();
 let isPlaying = false;
 let currentTrackIndex = -1;
-let lastVolume = 1.0; // Store last volume level for mute toggle
+let lastVolume = 1.0;
 const tracks = Array.from(document.querySelectorAll('.track-item'));
 
 // Format time helper function
@@ -279,14 +279,14 @@ function updateProgress() {
     document.getElementById('duration').textContent = formatTime(audio.duration);
 }
 
-// Update volume display
 function updateVolumeDisplay() {
     const volumeIcon = document.querySelector('#mute-toggle i');
     const volumeBar = document.querySelector('#volume-slider .progress-bar');
     
+    // Update volume bar width
     volumeBar.style.width = `${audio.volume * 100}%`;
     
-    // Update volume icon based on level
+    // Update volume icon
     volumeIcon.className = 'fas';
     if (audio.volume === 0) {
         volumeIcon.classList.add('fa-volume-mute');
@@ -297,23 +297,127 @@ function updateVolumeDisplay() {
     }
 }
 
-// Handle progress bar clicks
-document.getElementById('progress-bar').addEventListener('click', (e) => {
-    if (!audio.duration) return;
+function togglePlayPause() {
+    if (!currentTrack) return;
     
-    const rect = e.target.getBoundingClientRect();
-    const pos = (e.clientX - rect.left) / rect.width;
-    audio.currentTime = pos * audio.duration;
-    updateProgress();
+    if (isPlaying) {
+        audio.pause();
+        document.querySelector('#play-pause i').classList.replace('fa-pause', 'fa-play');
+        isPlaying = false;
+    } else {
+        audio.play().catch(error => {
+            showError('Error playing track: ' + error.message);
+        });
+        document.querySelector('#play-pause i').classList.replace('fa-play', 'fa-pause');
+        isPlaying = true;
+    }
+}
+
+function playTrack(trackId) {
+    if (currentTrack === trackId) {
+        togglePlayPause();
+        return;
+    }
+
+    currentTrack = trackId;
+    
+    // Store current volume before creating new Audio object
+    const currentVolume = audio ? audio.volume : 1;
+    
+    // Create new Audio object
+    audio = new Audio();
+    audio.volume = currentVolume; // Restore volume
+    
+    // Add event listeners
+    audio.addEventListener('timeupdate', updateProgress);
+    audio.addEventListener('loadedmetadata', () => {
+        document.getElementById('duration').textContent = formatTime(audio.duration);
+        updateProgress();
+    });
+    audio.addEventListener('ended', () => {
+        document.querySelector('#play-pause i').classList.replace('fa-pause', 'fa-play');
+        isPlaying = false;
+        // Auto-play next track
+        if (currentTrackIndex < tracks.length - 1) {
+            currentTrackIndex++;
+            const nextTrackId = tracks[currentTrackIndex].dataset.trackId;
+            playTrack(nextTrackId);
+        }
+    });
+    audio.addEventListener('error', (e) => {
+        console.error('Audio error:', e);
+        showError('Error loading audio file: ' + (e.target.error ? e.target.error.message : 'Unknown error'));
+        document.querySelector('#play-pause i').classList.replace('fa-pause', 'fa-play');
+        isPlaying = false;
+    });
+
+    // Set source and play
+    audio.src = `/track/${trackId}/play/`;
+    
+    // Play the track
+    audio.play().then(() => {
+        isPlaying = true;
+        document.querySelector('#play-pause i').classList.replace('fa-play', 'fa-pause');
+    }).catch(error => {
+        showError('Error playing track: ' + error.message);
+        document.querySelector('#play-pause i').classList.replace('fa-pause', 'fa-play');
+        isPlaying = false;
+    });
+
+    // Update track info
+    fetch(`/track/${trackId}/info/`)
+        .then(response => {
+            if (!response.ok) throw new Error('Track not found');
+            return response.json();
+        })
+        .then(updateNowPlayingInfo)
+        .catch(error => {
+            showError(error.message);
+            document.querySelector('#play-pause i').classList.replace('fa-pause', 'fa-play');
+            isPlaying = false;
+        });
+}
+
+// Event Listeners
+document.getElementById('play-pause').addEventListener('click', () => {
+    if (currentTrack) {
+        togglePlayPause();
+    }
 });
 
-// Handle volume control
+// Volume control
 document.getElementById('volume-slider').addEventListener('click', (e) => {
     const rect = e.target.getBoundingClientRect();
-    const pos = (e.clientX - rect.left) / rect.width;
-    audio.volume = Math.max(0, Math.min(1, pos));
-    lastVolume = audio.volume;
+    const clickPosition = e.clientX - rect.left;
+    const newVolume = Math.max(0, Math.min(1, clickPosition / rect.width));
+    
+    audio.volume = newVolume;
+    lastVolume = newVolume;
     updateVolumeDisplay();
+});
+
+// Make the volume slider draggable
+const volumeSlider = document.getElementById('volume-slider');
+let isDragging = false;
+
+volumeSlider.addEventListener('mousedown', () => {
+    isDragging = true;
+});
+
+document.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    
+    const rect = volumeSlider.getBoundingClientRect();
+    const clickPosition = e.clientX - rect.left;
+    const newVolume = Math.max(0, Math.min(1, clickPosition / rect.width));
+    
+    audio.volume = newVolume;
+    lastVolume = newVolume;
+    updateVolumeDisplay();
+});
+
+document.addEventListener('mouseup', () => {
+    isDragging = false;
 });
 
 // Mute toggle
@@ -327,90 +431,30 @@ document.getElementById('mute-toggle').addEventListener('click', () => {
     updateVolumeDisplay();
 });
 
-// Enhanced playTrack function
-function playTrack(trackId) {
-    if (currentTrack === trackId) {
-        if (isPlaying) {
-            audio.pause();
-            document.querySelector('#play-pause i').classList.replace('fa-pause', 'fa-play');
-        } else {
-            audio.play().catch(error => {
-                showError('Error playing track: ' + error.message);
-            });
-            document.querySelector('#play-pause i').classList.replace('fa-play', 'fa-pause');
-        }
-        isPlaying = !isPlaying;
-    } else {
-        currentTrack = trackId;
-        
-        // Create a new Audio object to avoid any cached state
-        if (audio) {
-            const oldVolume = audio.volume;
-            audio.pause();
-            audio.src = '';
-            audio = new Audio();
-            audio.volume = oldVolume; // Preserve volume setting
-        }
-        
-        // Add event listeners
-        audio.addEventListener('timeupdate', updateProgress);
-        audio.addEventListener('loadedmetadata', () => {
-            document.getElementById('duration').textContent = formatTime(audio.duration);
-            updateProgress();
-        });
-        audio.addEventListener('ended', () => {
-            document.querySelector('#play-pause i').classList.replace('fa-pause', 'fa-play');
-            isPlaying = false;
-            // Optionally auto-play next track
-            if (currentTrackIndex < tracks.length - 1) {
-                currentTrackIndex++;
-                const nextTrackId = tracks[currentTrackIndex].dataset.trackId;
-                playTrack(nextTrackId);
-            }
-        });
-        audio.addEventListener('error', (e) => {
-            console.error('Audio error:', e);
-            showError('Error loading audio file: ' + (e.target.error ? e.target.error.message : 'Unknown error'));
-            document.querySelector('#play-pause i').classList.replace('fa-pause', 'fa-play');
-            isPlaying = false;
-        });
+// Progress bar
+document.getElementById('progress-bar').addEventListener('click', (e) => {
+    if (!audio.duration) return;
+    
+    const rect = e.target.getBoundingClientRect();
+    const clickPosition = e.clientX - rect.left;
+    const newTime = (clickPosition / rect.width) * audio.duration;
+    
+    audio.currentTime = newTime;
+    updateProgress();
+});
 
-        // Set source and play
-        audio.src = `/track/${trackId}/play/`;
-        audio.load();
-        audio.play().catch(error => {
-            showError('Error playing track: ' + error.message);
-            document.querySelector('#play-pause i').classList.replace('fa-pause', 'fa-play');
-            isPlaying = false;
-        });
-        
-        isPlaying = true;
-        document.querySelector('#play-pause i').classList.replace('fa-play', 'fa-pause');
-        
-        // Update track info
-        fetch(`/track/${trackId}/info/`)
-            .then(response => {
-                if (!response.ok) throw new Error('Track not found');
-                return response.json();
-            })
-            .then(updateNowPlayingInfo)
-            .catch(error => {
-                showError(error.message);
-                document.querySelector('#play-pause i').classList.replace('fa-pause', 'fa-play');
-                isPlaying = false;
-            });
-    }
-}
+// Initialize volume display
+updateVolumeDisplay();
 
 // Keyboard controls
 document.addEventListener('keydown', (e) => {
-    if (e.target.tagName === 'INPUT') return; // Don't interfere with input fields
+    if (e.target.tagName === 'INPUT') return;
     
     switch(e.code) {
         case 'Space':
             e.preventDefault();
             if (currentTrack) {
-                playTrack(currentTrack);
+                togglePlayPause();
             }
             break;
         case 'ArrowLeft':
@@ -437,9 +481,6 @@ document.addEventListener('keydown', (e) => {
             break;
     }
 });
-
-// Initialize volume display
-updateVolumeDisplay();
 
 function showError(message) {
     const errorAlert = document.getElementById('errorAlert');
