@@ -114,7 +114,10 @@ class ScanDirectoryView(View):
 
                         # Get or create album
                         album, _ = Album.objects.get_or_create(
-                            title=album, artist=artist, cover_art=cover_art
+                            title=album, artist=artist,
+                            defaults={
+                                "cover_art":cover_art,
+                            }
                         )
                         # Create track if it doesn't exist
 
