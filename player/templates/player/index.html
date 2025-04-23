@@ -161,6 +161,12 @@
                 <h5 class="card-title">Now Playing</h5>
                 <div id="now-playing-info" class="text-center">
                     <div class="now-playing-details">
+                        <!-- Add cover art container -->
+                        <div class="cover-art-container mb-3">
+                            <img id="cover-art" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" 
+                                 alt="Album Cover" 
+                                 class="img-fluid rounded shadow-sm">
+                        </div>
                         <h6 class="track-title mb-2">No track selected</h6>
                         <p class="text-muted artist-album mb-3">-</p>
                         <div class="track-metadata">
@@ -556,6 +562,15 @@ function updateNowPlayingInfo(data) {
     const nowPlayingInfo = document.getElementById('now-playing-info');
     nowPlayingInfo.querySelector('.track-title').textContent = data.title;
     nowPlayingInfo.querySelector('.artist-album').textContent = `${data.artist} - ${data.album}`;
+    
+    // Update cover art
+    const coverArt = document.getElementById('cover-art');
+    if (data.cover_art) {
+        coverArt.src = `data:image/png;base64,${data.cover_art}`;
+    } else {
+        // Set default cover art if none available
+        coverArt.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+    }
     
     // Update metadata
     document.getElementById('track-duration').textContent = data.duration || '--:--';

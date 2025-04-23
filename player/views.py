@@ -1,3 +1,4 @@
+import base64
 import sys
 import os
 
@@ -259,6 +260,7 @@ class GetTrackInfoView(View):
                 "title": track.title,
                 "artist": ", ".join(artist.name for artist in track.artist.all()),
                 "album": track.album.title,
+                "cover_art": base64.b64encode(track.album.cover_art).decode('utf-8'),
                 "genre": ", ".join(genre.name for genre in track.genre.all()),
                 "duration": duration,
                 "bitrate": bitrate,

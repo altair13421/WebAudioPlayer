@@ -31,7 +31,7 @@ class Album(models.Model):
     title = models.CharField(max_length=200)
     artist = models.ForeignKey(Artist, on_delete=models.CASCADE, related_name="albums")
     release_date = models.DateField(null=True, blank=True)
-    cover_art = models.FilePathField(null=True, blank=True)
+    cover_art = models.BinaryField(null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
