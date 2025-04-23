@@ -297,8 +297,9 @@ function updateVolumeDisplay() {
     }
 }
 
+// Separate function for play/pause toggle
 function togglePlayPause() {
-    if (!currentTrack) return;
+    if (!audio.src) return; // Don't do anything if no track is loaded
     
     if (isPlaying) {
         audio.pause();
@@ -313,22 +314,46 @@ function togglePlayPause() {
     }
 }
 
+// Separate function for stopping current audio
+function stopCurrentAudio() {
+    if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+        audio.src = '';
+        
+        // Reset play button state
+        document.querySelector('#play-pause i').classList.replace('fa-pause', 'fa-play');
+        isPlaying = false;
+        
+        // Reset progress
+        document.querySelector('.progress-bar').style.width = '0%';
+        document.getElementById('current-time').textContent = '0:00';
+        document.getElementById('duration').textContent = '0:00';
+    }
+}
+
+// Main play track function
 function playTrack(trackId) {
+    // If same track, just toggle play/pause
     if (currentTrack === trackId) {
         togglePlayPause();
         return;
     }
 
+    // Stop current audio before playing new track
+    stopCurrentAudio();
+    
+    // Set new current track
     currentTrack = trackId;
     
-    // Store current volume before creating new Audio object
-    const currentVolume = audio ? audio.volume : 1;
+    // Store current volume
+    const currentVolume = audio.volume;
     
-    // Create new Audio object
+    // Create new audio object
     audio = new Audio();
-    audio.volume = currentVolume; // Restore volume
+    audio.volume = currentVolume;
     
-    // Add event listeners
+    // Set up event listeners
     audio.addEventListener('timeupdate', updateProgress);
     audio.addEventListener('loadedmetadata', () => {
         document.getElementById('duration').textContent = formatTime(audio.duration);
@@ -353,8 +378,6 @@ function playTrack(trackId) {
 
     // Set source and play
     audio.src = `/track/${trackId}/play/`;
-    
-    // Play the track
     audio.play().then(() => {
         isPlaying = true;
         document.querySelector('#play-pause i').classList.replace('fa-play', 'fa-pause');
@@ -378,11 +401,97 @@ function playTrack(trackId) {
         });
 }
 
-// Event Listeners
+// Event Listeners for controls
 document.getElementById('play-pause').addEventListener('click', () => {
     if (currentTrack) {
         togglePlayPause();
     }
+});
+
+document.getElementById('next-track').addEventListener('click', () => {
+    if (currentTrackIndex < tracks.length - 1) {
+        currentTrackIndex++;
+        const trackId = tracks[currentTrackIndex].dataset.trackId;
+        playTrack(trackId);
+    }
+});
+
+document.getElementById('prev-track').addEventListener('click', () => {
+    if (currentTrackIndex > 0) {
+        currentTrackIndex--;
+        const trackId = tracks[currentTrackIndex].dataset.trackId;
+        playTrack(trackId);
+    }
+});
+
+// Track item click handlers
+document.querySelectorAll('.track-item').forEach((track, index) => {
+    track.addEventListener('click', () => {
+        const trackId = track.dataset.trackId;
+        currentTrackIndex = index;
+        playTrack(trackId);
+    });
+});
+
+// Progress bar click handler
+document.getElementById('progress-bar').addEventListener('click', (e) => {
+    if (!audio.duration) return;
+    
+    const rect = e.target.getBoundingClientRect();
+    const clickPosition = e.clientX - rect.left;
+    const newTime = (clickPosition / rect.width) * audio.duration;
+    
+    audio.currentTime = newTime;
+    updateProgress();
+});
+
+// Update progress function
+function updateProgress() {
+    if (!audio.duration) return;
+    
+    const progress = (audio.currentTime / audio.duration) * 100;
+    document.querySelector('.progress-bar').style.width = `${progress}%`;
+    document.getElementById('current-time').textContent = formatTime(audio.currentTime);
+    document.getElementById('duration').textContent = formatTime(audio.duration);
+}
+
+// Format time helper
+function formatTime(seconds) {
+    if (!seconds || isNaN(seconds)) return '0:00';
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+}
+
+// Keyboard controls
+document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT') return;
+    
+    switch(e.code) {
+        case 'Space':
+            e.preventDefault();
+            if (currentTrack) {
+                togglePlayPause();
+            }
+            break;
+        case 'ArrowLeft':
+            if (audio.currentTime >= 5) {
+                audio.currentTime -= 5;
+            } else {
+                audio.currentTime = 0;
+            }
+            break;
+        case 'ArrowRight':
+            if (audio.currentTime + 5 < audio.duration) {
+                audio.currentTime += 5;
+            }
+            break;
+    }
+});
+
+// Clean up when leaving page
+window.addEventListener('beforeunload', () => {
+    stopCurrentAudio();
 });
 
 // Volume control
@@ -431,57 +540,6 @@ document.getElementById('mute-toggle').addEventListener('click', () => {
     updateVolumeDisplay();
 });
 
-// Progress bar
-document.getElementById('progress-bar').addEventListener('click', (e) => {
-    if (!audio.duration) return;
-    
-    const rect = e.target.getBoundingClientRect();
-    const clickPosition = e.clientX - rect.left;
-    const newTime = (clickPosition / rect.width) * audio.duration;
-    
-    audio.currentTime = newTime;
-    updateProgress();
-});
-
-// Initialize volume display
-updateVolumeDisplay();
-
-// Keyboard controls
-document.addEventListener('keydown', (e) => {
-    if (e.target.tagName === 'INPUT') return;
-    
-    switch(e.code) {
-        case 'Space':
-            e.preventDefault();
-            if (currentTrack) {
-                togglePlayPause();
-            }
-            break;
-        case 'ArrowLeft':
-            if (audio.currentTime >= 5) {
-                audio.currentTime -= 5;
-            } else {
-                audio.currentTime = 0;
-            }
-            break;
-        case 'ArrowRight':
-            if (audio.currentTime + 5 < audio.duration) {
-                audio.currentTime += 5;
-            }
-            break;
-        case 'ArrowUp':
-            e.preventDefault();
-            audio.volume = Math.min(1, audio.volume + 0.1);
-            updateVolumeDisplay();
-            break;
-        case 'ArrowDown':
-            e.preventDefault();
-            audio.volume = Math.max(0, audio.volume - 0.1);
-            updateVolumeDisplay();
-            break;
-    }
-});
-
 function showError(message) {
     const errorAlert = document.getElementById('errorAlert');
     const errorMessage = document.getElementById('errorMessage');
@@ -505,15 +563,6 @@ function updateNowPlayingInfo(data) {
     document.getElementById('track-bitrate').textContent = data.bitrate || '---';
     document.getElementById('track-genre').textContent = data.genre || '---';
 }
-
-// Event Listeners
-document.querySelectorAll('.track-item').forEach((track, index) => {
-    track.addEventListener('click', () => {
-        const trackId = track.dataset.trackId;
-        currentTrackIndex = index;
-        playTrack(trackId);
-    });
-});
 
 // Edit Track Functionality
 document.querySelectorAll('.edit-track').forEach(button => {
