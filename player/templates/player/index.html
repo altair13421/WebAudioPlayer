@@ -309,7 +309,7 @@ function togglePlayPause() {
     
     if (isPlaying) {
         audio.pause();
-        document.squerySelector('#play-pause i').classList.replace('fa-pause', 'fa-play');
+        document.querySelector('#play-pause i').classList.replace('fa-pause', 'fa-play');
         isPlaying = false;
     } else {
         audio.play().catch(error => {
