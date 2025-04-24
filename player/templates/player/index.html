@@ -4,47 +4,39 @@
 {% block title %}Music Player - Home{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-8">
-        <div class="music-player">
-            <div class="player-controls mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 id="now-playing">No track selected</h5>
-                    <div class="controls">
-                        <button class="btn btn-outline-primary" id="prev-track">
-                            <i class="fas fa-step-backward"></i>
-                        </button>
-                        <button class="btn btn-primary" id="play-pause">
-                            <i class="fas fa-play"></i>
-                        </button>
-                        <button class="btn btn-outline-primary" id="next-track">
-                            <i class="fas fa-step-forward"></i>
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Progress bar with times -->
-                <div class="progress-container">
-                    <div class="time-display d-flex justify-content-between mb-1">
-                        <span id="current-time">0:00</span>
-                        <span id="duration">0:00</span>
-                    </div>
-                    <div class="progress" id="progress-bar">
-                        <div class="progress-bar" role="progressbar" style="width: 0%"></div>
-                    </div>
-                </div>
-
-                <!-- Volume control -->
-                <div class="volume-control mt-3 d-flex align-items-center">
-                    <button class="btn btn-link btn-sm text-muted p-0 me-2" id="mute-toggle">
-                        <i class="fas fa-volume-up"></i>
-                    </button>
-                    <div class="progress" id="volume-slider" style="height: 6px; flex-grow: 1; max-width: 100px;">
-                        <div class="progress-bar bg-primary" role="progressbar" style="width: 100%"></div>
-                    </div>
-                </div>
+<div class="app-container">
+    <!-- Add this right after the opening body tag for the expandable album art -->
+    <div class="expanded-album-art" id="expandedAlbumArt">
+        <div class="expanded-album-content">
+            <div class="expanded-image-container">
+                <img id="expandedAlbumImage" src="" alt="Album Art">
             </div>
+            <div class="expanded-track-info">
+                <h3 id="expandedTrackTitle"></h3>
+                <p id="expandedArtistAlbum"></p>
+            </div>
+        </div>
+    </div>
 
+    <!-- Search Bar -->
+    <div class="search-wrapper">
+        <div class="search-container">
+            <div class="input-group">
+                <span class="input-group-text bg-dark border-secondary">
+                    <i class="fas fa-search text-secondary"></i>
+                </span>
+                <input type="text" 
+                       id="search-input" 
+                       class="form-control bg-dark border-secondary text-light" 
+                       placeholder="Search songs, artists, or albums...">
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="content-wrapper">
+        <div class="library-section">
+            <!-- Tabs Navigation -->
             <ul class="nav nav-tabs" id="libraryTabs" role="tablist">
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active" id="tracks-tab" data-bs-toggle="tab" data-bs-target="#tracks" type="button" role="tab">
@@ -68,29 +60,35 @@
                 </li>
             </ul>
 
+            <!-- Tab Content -->
             <div class="tab-content" id="libraryTabsContent">
-                <!-- Tracks Tab -->
+                <!-- Tracks List -->
                 <div class="tab-pane fade show active" id="tracks" role="tabpanel">
-                    <div class="track-list">
+                    <div class="tracks-list">
                         {% for track in tracks %}
-                        <div class="track-item" data-track-id="{{ track.id }}">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="mb-0">{{ track.title }}</h6>
-                                    <small class="text-muted">{% for artist_name in track.artist.all %}{{ artist_name.name }} {%empty%}No Artist Found{%endfor%} - {{ track.album.title }}</small>
+                        <div class="track-item" data-track-id="{{ track.id }}" data-title="{{ track.title }}" data-artist="{% for artist in track.artist.all %}{{ artist.name }}{% endfor %}" data-album="{{ track.album.title }}">
+                            <div class="d-flex align-items-center">
+                                <div class="track-number me-3">{{ forloop.counter }}</div>
+                                <div class="track-info flex-grow-1">
+                                    <div class="track-title">{{ track.title }}</div>
+                                    <div class="track-subtitle">
+                                        {% for artist in track.artist.all %}{{ artist.name }}{% endfor %} - {{ track.album.title }}
+                                    </div>
                                 </div>
-                                <div>
-                                    <button class="btn btn-sm btn-outline-primary edit-track" data-track-id="{{ track.id }}">
+                                <div class="track-actions">
+                                    <button class="btn btn-link btn-sm edit-track" data-track-id="{{ track.id }}">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-outline-danger remove-track" data-track-id="{{ track.id }}">
+                                    <button class="btn btn-link btn-sm remove-track" data-track-id="{{ track.id }}">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
                             </div>
                         </div>
                         {% empty %}
-                        <p class="text-center">No tracks found. Scan a directory to add music.</p>
+                        <div class="no-tracks-message">
+                            <p>No tracks found. Scan a directory to add music.</p>
+                        </div>
                         {% endfor %}
                     </div>
                 </div>
@@ -155,48 +153,50 @@
         </div>
     </div>
 
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Now Playing</h5>
-                <div id="now-playing-info" class="text-center">
-                    <div class="now-playing-details">
-                        <!-- Add cover art container -->
-                        <div class="cover-art-container mb-3">
-                            <img id="cover-art" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" 
-                                 alt="Album Cover" 
-                                 class="img-fluid rounded shadow-sm">
-                        </div>
-                        <h6 class="track-title mb-2">No track selected</h6>
-                        <p class="text-muted artist-album mb-3">-</p>
-                        <div class="track-metadata">
-                            <div class="row g-2 text-muted small">
-                                <div class="col-6">
-                                    <div class="metadata-item">
-                                        <i class="fas fa-clock me-1"></i>
-                                        <span id="track-duration">--:--</span>
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="metadata-item">
-                                        <i class="fas fa-music me-1"></i>
-                                        <span id="track-format">---</span>
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="metadata-item">
-                                        <i class="fas fa-wave-square me-1"></i>
-                                        <span id="track-bitrate">---</span>
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="metadata-item">
-                                        <i class="fas fa-tag me-1"></i>
-                                        <span id="track-genre">---</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+    <!-- Fixed bottom player -->
+    <div class="player-bar">
+        <div class="player-content">
+            <!-- Left: Album art and track info -->
+            <div class="now-playing-section">
+                <div class="album-art">
+                    <img id="currentAlbumArt" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" alt="Album Art">
+                </div>
+                <div class="track-info">
+                    <span id="nowPlayingTitle" class="track-title">No track selected</span>
+                    <span id="nowPlayingArtist" class="track-artist">-</span>
+                </div>
+            </div>
+
+            <!-- Center: Player controls and progress -->
+            <div class="player-controls">
+                <div class="control-buttons">
+                    <button class="control-btn" id="prevButton">
+                        <i class="fas fa-step-backward"></i>
+                    </button>
+                    <button class="control-btn play-btn" id="playPauseButton">
+                        <i class="fas fa-play"></i>
+                    </button>
+                    <button class="control-btn" id="nextButton">
+                        <i class="fas fa-step-forward"></i>
+                    </button>
+                </div>
+                <div class="progress-container">
+                    <span id="currentTime" class="time">0:00</span>
+                    <div class="progress">
+                        <div class="progress-bar" id="progressBar"></div>
+                    </div>
+                    <span id="duration" class="time">0:00</span>
+                </div>
+            </div>
+
+            <!-- Right: Volume control -->
+            <div class="volume-control">
+                <button class="control-btn" id="muteButton">
+                    <i class="fas fa-volume-up"></i>
+                </button>
+                <div class="volume-slider">
+                    <div class="progress">
+                        <div class="progress-bar" id="volumeBar"></div>
                     </div>
                 </div>
             </div>
@@ -281,13 +281,13 @@ function updateProgress() {
     
     const progress = (audio.currentTime / audio.duration) * 100;
     document.querySelector('.progress-bar').style.width = `${progress}%`;
-    document.getElementById('current-time').textContent = formatTime(audio.currentTime);
+    document.getElementById('currentTime').textContent = formatTime(audio.currentTime);
     document.getElementById('duration').textContent = formatTime(audio.duration);
 }
 
 function updateVolumeDisplay() {
-    const volumeIcon = document.querySelector('#mute-toggle i');
-    const volumeBar = document.querySelector('#volume-slider .progress-bar');
+    const volumeIcon = document.querySelector('#muteButton i');
+    const volumeBar = document.querySelector('#volumeBar .progress-bar');
     
     // Update volume bar width
     volumeBar.style.width = `${audio.volume * 100}%`;
@@ -309,13 +309,13 @@ function togglePlayPause() {
     
     if (isPlaying) {
         audio.pause();
-        document.querySelector('#play-pause i').classList.replace('fa-pause', 'fa-play');
+        document.querySelector('#playPauseButton i').classList.replace('fa-pause', 'fa-play');
         isPlaying = false;
     } else {
         audio.play().catch(error => {
             showError('Error playing track: ' + error.message);
         });
-        document.querySelector('#play-pause i').classList.replace('fa-play', 'fa-pause');
+        document.querySelector('#playPauseButton i').classList.replace('fa-play', 'fa-pause');
         isPlaying = true;
     }
 }
@@ -328,12 +328,12 @@ function stopCurrentAudio() {
         audio.src = '';
         
         // Reset play button state
-        document.querySelector('#play-pause i').classList.replace('fa-pause', 'fa-play');
+        document.querySelector('#playPauseButton i').classList.replace('fa-pause', 'fa-play');
         isPlaying = false;
         
         // Reset progress
         document.querySelector('.progress-bar').style.width = '0%';
-        document.getElementById('current-time').textContent = '0:00';
+        document.getElementById('currentTime').textContent = '0:00';
         document.getElementById('duration').textContent = '0:00';
     }
 }
@@ -366,7 +366,7 @@ function playTrack(trackId) {
         updateProgress();
     });
     audio.addEventListener('ended', () => {
-        document.querySelector('#play-pause i').classList.replace('fa-pause', 'fa-play');
+        document.querySelector('#playPauseButton i').classList.replace('fa-pause', 'fa-play');
         isPlaying = false;
         // Auto-play next track
         if (currentTrackIndex < tracks.length - 1) {
@@ -378,7 +378,7 @@ function playTrack(trackId) {
     audio.addEventListener('error', (e) => {
         console.error('Audio error:', e);
         showError('Error loading audio file: ' + (e.target.error ? e.target.error.message : 'Unknown error'));
-        document.querySelector('#play-pause i').classList.replace('fa-pause', 'fa-play');
+        document.querySelector('#playPauseButton i').classList.replace('fa-pause', 'fa-play');
         isPlaying = false;
     });
 
@@ -386,10 +386,10 @@ function playTrack(trackId) {
     audio.src = `/track/${trackId}/play/`;
     audio.play().then(() => {
         isPlaying = true;
-        document.querySelector('#play-pause i').classList.replace('fa-play', 'fa-pause');
+        document.querySelector('#playPauseButton i').classList.replace('fa-play', 'fa-pause');
     }).catch(error => {
         showError('Error playing track: ' + error.message);
-        document.querySelector('#play-pause i').classList.replace('fa-pause', 'fa-play');
+        document.querySelector('#playPauseButton i').classList.replace('fa-pause', 'fa-play');
         isPlaying = false;
     });
 
@@ -402,19 +402,19 @@ function playTrack(trackId) {
         .then(updateNowPlayingInfo)
         .catch(error => {
             showError(error.message);
-            document.querySelector('#play-pause i').classList.replace('fa-pause', 'fa-play');
+            document.querySelector('#playPauseButton i').classList.replace('fa-pause', 'fa-play');
             isPlaying = false;
         });
 }
 
 // Event Listeners for controls
-document.getElementById('play-pause').addEventListener('click', () => {
+document.getElementById('playPauseButton').addEventListener('click', () => {
     if (currentTrack) {
         togglePlayPause();
     }
 });
 
-document.getElementById('next-track').addEventListener('click', () => {
+document.getElementById('nextButton').addEventListener('click', () => {
     if (currentTrackIndex < tracks.length - 1) {
         currentTrackIndex++;
         const trackId = tracks[currentTrackIndex].dataset.trackId;
@@ -422,7 +422,7 @@ document.getElementById('next-track').addEventListener('click', () => {
     }
 });
 
-document.getElementById('prev-track').addEventListener('click', () => {
+document.getElementById('prevButton').addEventListener('click', () => {
     if (currentTrackIndex > 0) {
         currentTrackIndex--;
         const trackId = tracks[currentTrackIndex].dataset.trackId;
@@ -440,7 +440,7 @@ document.querySelectorAll('.track-item').forEach((track, index) => {
 });
 
 // Progress bar click handler
-document.getElementById('progress-bar').addEventListener('click', (e) => {
+document.getElementById('progressBar').addEventListener('click', (e) => {
     if (!audio.duration) return;
     
     const rect = e.target.getBoundingClientRect();
@@ -450,24 +450,6 @@ document.getElementById('progress-bar').addEventListener('click', (e) => {
     audio.currentTime = newTime;
     updateProgress();
 });
-
-// Update progress function
-function updateProgress() {
-    if (!audio.duration) return;
-    
-    const progress = (audio.currentTime / audio.duration) * 100;
-    document.querySelector('.progress-bar').style.width = `${progress}%`;
-    document.getElementById('current-time').textContent = formatTime(audio.currentTime);
-    document.getElementById('duration').textContent = formatTime(audio.duration);
-}
-
-// Format time helper
-function formatTime(seconds) {
-    if (!seconds || isNaN(seconds)) return '0:00';
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-}
 
 // Keyboard controls
 document.addEventListener('keydown', (e) => {
@@ -501,7 +483,7 @@ window.addEventListener('beforeunload', () => {
 });
 
 // Volume control
-document.getElementById('volume-slider').addEventListener('click', (e) => {
+document.getElementById('volumeBar').addEventListener('click', (e) => {
     const rect = e.target.getBoundingClientRect();
     const clickPosition = e.clientX - rect.left;
     const newVolume = Math.max(0, Math.min(1, clickPosition / rect.width));
@@ -512,17 +494,17 @@ document.getElementById('volume-slider').addEventListener('click', (e) => {
 });
 
 // Make the volume slider draggable
-const volumeSlider = document.getElementById('volume-slider');
+const volumeBar = document.getElementById('volumeBar');
 let isDragging = false;
 
-volumeSlider.addEventListener('mousedown', () => {
+volumeBar.addEventListener('mousedown', () => {
     isDragging = true;
 });
 
 document.addEventListener('mousemove', (e) => {
     if (!isDragging) return;
     
-    const rect = volumeSlider.getBoundingClientRect();
+    const rect = volumeBar.getBoundingClientRect();
     const clickPosition = e.clientX - rect.left;
     const newVolume = Math.max(0, Math.min(1, clickPosition / rect.width));
     
@@ -536,7 +518,7 @@ document.addEventListener('mouseup', () => {
 });
 
 // Mute toggle
-document.getElementById('mute-toggle').addEventListener('click', () => {
+document.getElementById('muteButton').addEventListener('click', () => {
     if (audio.volume > 0) {
         lastVolume = audio.volume;
         audio.volume = 0;
@@ -555,28 +537,22 @@ function showError(message) {
 }
 
 function updateNowPlayingInfo(data) {
-    // Update main title and artist info
-    document.getElementById('now-playing').textContent = `${data.title} - ${data.artist}`;
+    // Update track info
+    document.getElementById('nowPlayingTitle').textContent = data.title;
+    document.getElementById('nowPlayingArtist').textContent = `${data.artist} - ${data.album}`;
     
-    // Update detailed info card
-    const nowPlayingInfo = document.getElementById('now-playing-info');
-    nowPlayingInfo.querySelector('.track-title').textContent = data.title;
-    nowPlayingInfo.querySelector('.artist-album').textContent = `${data.artist} - ${data.album}`;
-    
-    // Update cover art
-    const coverArt = document.getElementById('cover-art');
+    // Update album art
+    const albumArt = document.getElementById('currentAlbumArt');
     if (data.cover_art) {
-        coverArt.src = `data:image/png;base64,${data.cover_art}`;
+        albumArt.src = `data:image/png;base64,${data.cover_art}`;
     } else {
-        // Set default cover art if none available
-        coverArt.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+        albumArt.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
     }
     
-    // Update metadata
-    document.getElementById('track-duration').textContent = data.duration || '--:--';
-    document.getElementById('track-format').textContent = data.file_format || '---';
-    document.getElementById('track-bitrate').textContent = data.bitrate || '---';
-    document.getElementById('track-genre').textContent = data.genre || '---';
+    // Update expanded view if it's active
+    if (expandedAlbumArt.classList.contains('active')) {
+        updateExpandedView(data);
+    }
 }
 
 // Edit Track Functionality
@@ -669,5 +645,64 @@ function filterByAlbum(albumId) {
     // Implement album filtering
     console.log('Filtering by album:', albumId);
 }
+
+// Add this to your existing JavaScript
+document.getElementById('search-input').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const tracks = document.querySelectorAll('.track-item');
+    
+    tracks.forEach(track => {
+        const title = track.dataset.title.toLowerCase();
+        const artist = track.dataset.artist.toLowerCase();
+        const album = track.dataset.album.toLowerCase();
+        
+        if (title.includes(searchTerm) || 
+            artist.includes(searchTerm) || 
+            album.includes(searchTerm)) {
+            track.style.display = '';
+        } else {
+            track.style.display = 'none';
+        }
+    });
+});
+
+// Expanded Album Art functionality
+const expandedAlbumArt = document.getElementById('expandedAlbumArt');
+const albumArtTrigger = document.getElementById('albumArtTrigger');
+const expandedAlbumImage = document.getElementById('expandedAlbumImage');
+const expandedTrackTitle = document.getElementById('expandedTrackTitle');
+const expandedArtistAlbum = document.getElementById('expandedArtistAlbum');
+
+// Toggle expanded album art
+function toggleExpandedAlbumArt() {
+    expandedAlbumArt.classList.toggle('active');
+}
+
+// Update expanded view with current track info
+function updateExpandedView(data) {
+    expandedAlbumImage.src = document.getElementById('currentAlbumArt').src;
+    expandedTrackTitle.textContent = data.title;
+    expandedArtistAlbum.textContent = `${data.artist} - ${data.album}`;
+}
+
+// Event Listeners
+albumArtTrigger.addEventListener('click', () => {
+    if (currentTrack) {  // Only expand if a track is playing
+        toggleExpandedAlbumArt();
+    }
+});
+
+expandedAlbumArt.addEventListener('click', (e) => {
+    if (e.target === expandedAlbumArt) {
+        toggleExpandedAlbumArt();
+    }
+});
+
+// Add keyboard listener for escape key to close expanded view
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && expandedAlbumArt.classList.contains('active')) {
+        toggleExpandedAlbumArt();
+    }
+});
 </script>
 {% endblock %} 
