@@ -46,7 +46,26 @@ class IndexView(ListView):
         context = super().get_context_data(**kwargs)
         context["folder_form"] = FolderSelectForm()
         context["artists"] = Artist.objects.all()
-        context["albums"] = Album.objects.all().select_related("artist")
+        context["album_arts"] = []
+        for album in Album.objects.all():
+            if album.cover_art:
+                context["album_arts"].append({
+                    "album_id": album.pk,
+                    "title": album.title,
+                    "artist": album.artist,
+                    "release_date": album.release_date,
+                    "updated_at": album.updated_at,
+                    "album_art": base64.b64encode(album.cover_art).decode('utf-8')
+                })
+            else:
+                context["album_arts"].append({
+                    "album_id": album.pk,
+                    "title": album.title,
+                    "artist": album.artist,
+                    "release_date": album.release_date,
+                    "updated_at": album.updated_at,
+                    "album_art": ""
+                })
         context["genres"] = Genre.objects.all()
         return context
 
