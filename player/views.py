@@ -114,6 +114,8 @@ class ScanDirectoryView(View):
                             genre_list.append(genre)
 
                         # Get or create album
+                        if isinstance(cover_art, str):
+                            cover_art = cover_art.encode("utf-8")
                         album, _ = Album.objects.get_or_create(
                             title=album, artist=artist,
                             defaults={
@@ -123,7 +125,7 @@ class ScanDirectoryView(View):
                         # Create track if it doesn't exist
 
                         track, created = Track.objects.get_or_create(
-                            title=title,
+                            title=title, 
                             album=album,
                             defaults={
                                 "file_path": f"{file_path}",
@@ -199,6 +201,7 @@ class PlayTrackView(View):
             return response
 
         except Exception as e:
+            ic(e)
             return JsonResponse({"error": str(e)}, status=500)
 
 

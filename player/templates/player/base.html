@@ -58,6 +58,7 @@
             flex: 1;
             overflow-y: auto;
             padding: 20px;
+            margin: 0 0 90px 0;
         }
 
         /* Tracks List */
@@ -294,13 +295,13 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body class="bg-dark text-light">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <!--<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="{% url 'index' %}">
                 <i class="fas fa-music me-2"></i>Music Player
             </a>
         </div>
-    </nav>
+    </nav>-->
 
     <div class="container mt-4">
         {% if messages %}
