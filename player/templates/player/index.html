@@ -105,12 +105,12 @@
                 <!-- Albums Tab -->
                 <div class="tab-pane fade" id="albums" role="tabpanel">
                     <div class="row">
-                        {% for album in album_arts %}
-                        <div class="col-md-4 mb-4">
-                            <div class="card h-100 shadow-sm">
-                                {% if album.album_art != "" %}
+                        {% for album in albums %}
+                        <div class="col-md-3 mb-3">
+                            <div class="card h-100 shadow-sm flex flex-column-reverse" >
+                                {% if album.cover_art_base64 != "" %}
                                 <img 
-                                    src="data:image/png;base64,{{ album.album_art }}" 
+                                    src="data:image/png;base64,{{ album.cover_art_base64 }}" 
                                     alt="{{ album.title }}" 
                                     class="card-img-top"
                                     style="height: 200px; object-fit: cover;"

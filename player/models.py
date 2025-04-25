@@ -1,3 +1,4 @@
+import base64
 from django.db import models
 import os
 
@@ -36,6 +37,10 @@ class Album(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.artist.name}"
+
+    @property
+    def cover_art_base64(self):
+        return base64.b64encode(self.cover_art).decode('utf-8') if self.cover_art else ""
 
     class Meta:
         ordering = ["title"]
