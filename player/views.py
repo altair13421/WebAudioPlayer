@@ -15,7 +15,6 @@ from pathlib import Path
 from icecream import ic
 import mimetypes
 from urllib.parse import quote
-from django.utils.encoding import smart_str
 import time
 
 from .models import Artist, Album, Genre, Track
@@ -47,25 +46,6 @@ class IndexView(ListView):
         context["folder_form"] = FolderSelectForm()
         context["artists"] = Artist.objects.all()
         context["albums"] = Album.objects.all()
-        # for album in Album.objects.all():
-        #     if album.cover_art:
-        #         context["album_arts"].append({
-        #             "album_id": album.pk,
-        #             "title": album.title,
-        #             "artist": album.artist,
-        #             "release_date": album.release_date,
-        #             "updated_at": album.updated_at,
-        #             "album_art": 
-        #         })
-        #     else:
-        #         context["album_arts"].append({
-        #             "album_id": album.pk,
-        #             "title": album.title,
-        #             "artist": album.artist,
-        #             "release_date": album.release_date,
-        #             "updated_at": album.updated_at,
-        #             "album_art": ""
-        #         })
         context["genres"] = Genre.objects.all()
         return context
 
