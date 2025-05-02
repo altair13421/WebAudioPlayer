@@ -3,7 +3,7 @@ from django.db import models
 class LastFMSettings(models.Model):
     api_key = models.CharField(max_length=127)
     api_secret = models.CharField(max_length=127)
-    
+    app_name = models.CharField(max_length=127)
 
 
 # Create your models here.
