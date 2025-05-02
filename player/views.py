@@ -2,6 +2,7 @@ import base64
 import sys
 import os
 
+from django.db.models.manager import BaseManager
 from django.shortcuts import redirect, get_object_or_404
 from django.http import JsonResponse, FileResponse
 from django.contrib import messages
@@ -34,7 +35,7 @@ class IndexView(ListView):
 
     def get_queryset(self):
         # Check file existence for all tracks
-        tracks = Track.objects.all().select_related("album")
+        tracks: BaseManager[Track] = Track.objects.all().select_related("album")
         for track in tracks:
             track.check_file_exists()
 

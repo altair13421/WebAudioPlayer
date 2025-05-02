@@ -1,7 +1,9 @@
 import base64
 from django.db import models
 import os
-
+from django.db.models.manager import BaseManager
+from random import choice
+from icecream import ic
 # Create your models here.
 
 
@@ -10,12 +12,24 @@ class Artist(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    @property
+    def cover_art(self):
+        i = 0
+        albums: BaseManager[Album] = self.albums.all()
+        ic(self, self.albums.all())
+        if albums.exist():
+            if albums.count() < 2:
+                return albums.first().cover_art_base64
+            rand_album = choice(albums)
+            if rand_album.cover_art_base64 not in [None, ""]:
+                return rand_album.cover_art_base64
+        return ""
+
     def __str__(self):
         return self.name
 
     class Meta:
         ordering = ["name"]
-
 
 class Genre(models.Model):
     name = models.CharField(max_length=100)
@@ -40,7 +54,9 @@ class Album(models.Model):
 
     @property
     def cover_art_base64(self):
-        return base64.b64encode(self.cover_art).decode('utf-8') if self.cover_art else ""
+        return (
+            base64.b64encode(self.cover_art).decode("utf-8") if self.cover_art else ""
+        )
 
     class Meta:
         ordering = ["title"]
@@ -55,7 +71,7 @@ class Track(models.Model):
     duration = models.FloatField(default=0)
     track_number = models.PositiveIntegerField(null=True, blank=True)
     created_at = models.DateField(null=True)
-    is_valid = models.BooleanField(default=True) # Flag to track if file still exists
+    is_valid = models.BooleanField(default=True)  # Flag to track if file still exists
 
     def __str__(self):
         return f"{self.title} - {self.artist.name}"
@@ -73,3 +89,13 @@ class Track(models.Model):
 
     class Meta:
         ordering = ["album", "track_number", "title"]
+
+
+class Playlist(models.Model):
+    name = models.CharField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    songs = models.ManyToManyField(Track, related_name="playlist")
+
+    class Meta:
+        abstract = True
