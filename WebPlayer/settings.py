@@ -38,14 +38,17 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'player',
+    'player.apps.PlayerConfig',
+    'ImageFetcher.apps.ImageFetcherConfig',
     'django_bootstrap5',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -154,3 +157,16 @@ WHITENOISE_ALLOW_ALL_ORIGINS = True
 
 # Security settings
 SECURE_CONTENT_TYPE_NOSNIFF = True
+
+from django.contrib import messages
+from django.utils.translation import gettext as _
+#
+# # Custom message tags
+MESSAGE_TAGS = {
+    messages.DEBUG: 'alert alert-info',
+    messages.INFO: 'alert alert-info',
+    messages.SUCCESS: 'alert alert-success',
+    messages.WARNING: 'alert alert-warning',
+    messages.ERROR: 'alert alert-danger',
+}
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
