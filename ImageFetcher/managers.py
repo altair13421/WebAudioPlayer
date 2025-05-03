@@ -9,6 +9,7 @@ from django.conf import settings
 
 class ImageFetcher:
     def __init__(self, artist):
+        self.artist = artist
         self.url = self.create_url(artist)
 
     def create_url(self, artist):
@@ -37,7 +38,7 @@ class ImageFetcher:
                         image_url = image["src"]
                         if image_url:
                             images.append(self.clean_url(image_url))
-        self.write_images(images)
+        self.write_images(images, self.artist)
 
     def get_albums(self):
         """
@@ -47,7 +48,9 @@ class ImageFetcher:
         ...
 
     @staticmethod
-    def write_images(image_list: list[str] | str, artist: str = None, album: str = None):
+    def write_images(
+        image_list: list[str] | str, artist: str = None, album: str = None
+    ):
         """
         Writes the image URLs to a file.
         :param image_list: List of image URLs or a single URL
@@ -60,9 +63,13 @@ class ImageFetcher:
             if image:
                 filename = f""
                 if album:
-                    filename += os.path.join(settings.MEDIA_ROOT, artist, album, image.split("/")[-1])
+                    filename += os.path.join(
+                        settings.MEDIA_ROOT, artist, album, image.split("/")[-1]
+                    )
                 else:
-                    filename += os.path.join(settings.MEDIA_ROOT, artist, image.split("/")[-1])
+                    filename += os.path.join(
+                        settings.MEDIA_ROOT, artist, image.split("/")[-1]
+                    )
                 # check if Extension is in the filename
                 if not filename.endswith((".jpg", ".jpeg", ".png")):
                     filename += ".png"
@@ -82,6 +89,7 @@ class ImageFetcher:
             else:
                 print("No image URL found.")
 
+
 class LastFmImageFetcher:
     def __init__(self, api_key):
         self.api_key = api_key
@@ -100,24 +108,6 @@ class LastFmImageFetcher:
                 pattern = self.pattern
             # Remove unwanted characters from the URL
             return re.sub(pattern, "/i/u/", url)
-        return None
-
-    def _save_image(self, url, filename, artist, album=None):
-        """
-        Saves the image from the URL to a local file.
-        :param url: The URL of the image
-        :param filename: The name of the file to save the image as
-        :param album: The album name
-        :param artist: The artist name
-
-        :return: The filename if successful, None otherwise
-        """
-
-        response = requests.get(url)
-        if response.status_code == 200:
-            with open(filename, "wb") as f:
-                f.write(response.content)
-            return filename
         return None
 
     def get_album_image(self, artist, album):

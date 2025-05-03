@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class LastFMSettings(models.Model):
     api_key = models.CharField(max_length=127)
     api_secret = models.CharField(max_length=127)
@@ -8,7 +9,7 @@ class LastFMSettings(models.Model):
 
 # Create your models here.
 class LastFMArtist(models.Model):
-    mbid = models.CharField(max_length=127)
+    mbid = models.UUIDField(max_length=127)
     artist_name = models.CharField(max_length=255)
     about_artist = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -19,17 +20,50 @@ class LastFMArtist(models.Model):
 
 
 class LastFMAlbum(models.Model):
+    mbid = models.UUIDField()
     album = models.CharField(max_length=255)
     album_release_date = models.DateField()
-    album_artist = models.ForeignKey(LastFMArtist, on_delete=models.CASCADE, related_name='albums')
+    album_artist = models.ForeignKey(
+        LastFMArtist, on_delete=models.CASCADE, related_name="albums"
+    )
     album_genre = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Album: {self.album.title}, Image Path: {self.image_path}"
+    class Meta:
+        abstract = True
+        verbose_name = "LastFM Album"
+        verbose_name_plural = "LastFM Albums"
+
+class LastFMTrack(models.Model):
+    mbid = models.UUIDField()
+    track_name = models.CharField(max_length=255)
+    track_duration = models.IntegerField()
+    track_artist = models.ForeignKey(
+        LastFMArtist, on_delete=models.CASCADE, related_name="tracks"
+    )
+    track_album = models.ForeignKey(
+        LastFMAlbum, on_delete=models.CASCADE, related_name="tracks"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Track: {self.track_name.title}, Image Path: {self.image_path}"
+
+    class Meta:
+        abstract = True
+        verbose_name = "LastFM Track"
+        verbose_name_plural = "LastFM Tracks"
+
 
 class LastFMImages(models.Model):
     image = models.FilePathField()
-    artist_ref = models.ForeignKey(LastFMArtist, on_delete=models.CASCADE, related_name='images')
-    album_ref = models.ForeignKey(LastFMAlbum, on_delete=models.CASCADE, related_name='images')
+    artist_ref = models.ForeignKey(
+        LastFMArtist,
+        on_delete=models.CASCADE,
+        related_name="images",
+        null=True,
+        blank=True,
+    )
     created_at = models.DateTimeField(auto_now_add=True)
