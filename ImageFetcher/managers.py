@@ -1,7 +1,10 @@
+import django.urls
 import requests
 from icecream import ic
 import re
+import os
 from bs4 import BeautifulSoup
+from django.conf import settings
 
 
 class ImageFetcher:
@@ -22,20 +25,19 @@ class ImageFetcher:
         return re.sub(r"/i/u/[^/]+/", "/i/u/", url)
 
     def scrape_images(self):
+        images = []
         for i in range(1, 4):
             html_file = requests.get(f"{self.url}{i}")
             if html_file.status_code == 200:
-                print(f"Page {i} loaded successfully.")
                 bs = BeautifulSoup(html_file.content, "html.parser")
                 images_a_s = bs.find_all("li", class_="image-list-item-wrapper")
-                print(f"Found images, {len(images_a_s)}")
-                images = []
                 for image_a in images_a_s:
                     image = image_a.find("img")
                     if image:
                         image_url = image["src"]
                         if image_url:
-                            images.append(image_url)
+                            images.append(self.clean_url(image_url))
+        self.write_images(images)
 
     def get_albums(self):
         """
@@ -45,10 +47,40 @@ class ImageFetcher:
         ...
 
     @staticmethod
-    def write_images(image_list: list[str] | str):
+    def write_images(image_list: list[str] | str, artist: str = None, album: str = None):
+        """
+        Writes the image URLs to a file.
+        :param image_list: List of image URLs or a single URL
+        :param artist: Name of the artist
+        :param album: Name of the album
+        """
         if isinstance(image_list, str):
             image_list = [image_list]
-
+        for image in image_list:
+            if image:
+                filename = f""
+                if album:
+                    filename += os.path.join(settings.MEDIA_ROOT, artist, album, image.split("/")[-1])
+                else:
+                    filename += os.path.join(settings.MEDIA_ROOT, artist, image.split("/")[-1])
+                # check if Extension is in the filename
+                if not filename.endswith((".jpg", ".jpeg", ".png")):
+                    filename += ".png"
+                filepath = os.path.dirname(filename)
+                if not os.path.exists(filepath):
+                    os.makedirs(filepath, exist_ok=True)
+                # check if file already exists
+                if os.path.exists(filename):
+                    print(f"File already exists: {filename}")
+                    continue
+                with open(filename, "wb") as f:
+                    response = requests.get(image)
+                    if response.status_code == 200:
+                        f.write(response.content)
+                    else:
+                        print(f"Failed to fetch image: {image}")
+            else:
+                print("No image URL found.")
 
 class LastFmImageFetcher:
     def __init__(self, api_key):
