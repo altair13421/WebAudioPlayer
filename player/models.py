@@ -11,19 +11,17 @@ class Artist(models.Model):
     name = models.CharField(max_length=200)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    lastfm_ref = models.ForeignKey(
+        "ImageFetcher.LastFMArtist",
+        on_delete=models.CASCADE,
+        related_name="artist",
+        null=True,
+        blank=True,
+    )
 
     @property
     def cover_art(self):
-        i = 0
-        albums: BaseManager[Album] = self.albums.all()
-        ic(self, self.albums.all())
-        if albums.exist():
-            if albums.count() < 2:
-                return albums.first().cover_art_base64
-            rand_album = choice(albums)
-            if rand_album.cover_art_base64 not in [None, ""]:
-                return rand_album.cover_art_base64
-        return ""
+        ...  # Placeholder for the cover art property
 
     def __str__(self):
         return self.name

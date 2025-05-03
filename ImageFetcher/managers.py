@@ -5,12 +5,30 @@ import re
 import os
 from bs4 import BeautifulSoup
 from django.conf import settings
-
+from .models import LastFMSettings
 
 class ImageFetcher:
     def __init__(self, artist):
         self.artist = artist
         self.url = self.create_url(artist)
+        try:
+            lastfm_settings = LastFMSettings.objects.first()
+            if not lastfm_settings:
+                assert False, "LastFMSettings not found."
+            assert lastfm_settings.api_key and lastfm_settings.api_key != "", "API key is missing"
+            assert lastfm_settings.api_secret and lastfm_settings.api_secret != "", "API secret is missing"
+            assert lastfm_settings.app_name and lastfm_settings.app_name != "", "App name is missing"
+        except AssertionError as E:
+            ic(E)
+            api_key = input("Enter your LastFM API key: ")
+            api_secret = input("Enter your LastFM API secret: ")
+            app_name = input("Enter your LastFM app name: ")
+            lastfm_settings = LastFMSettings.objects.create(
+                api_key=api_key,
+                api_secret=api_secret,
+                app_name=app_name
+            )
+            ic('LastFMSettings created successfully.')
 
     def create_url(self, artist):
         """
@@ -24,6 +42,9 @@ class ImageFetcher:
 
     def clean_url(self, url):
         return re.sub(r"/i/u/[^/]+/", "/i/u/", url)
+
+    def get_artist_info(self):
+        ...
 
     def scrape_images(self):
         images = []
@@ -127,6 +148,7 @@ class LastFmImageFetcher:
         response = requests.get(self.base_url, params=params)
         if response.status_code == 200:
             data = response.json()
+            ic(data.keys(), data["album"].keys())
             if "album" in data and "image" in data["album"]:
                 images = data["album"]["image"]
                 if any(images):
@@ -149,13 +171,13 @@ class LastFmImageFetcher:
         if response.status_code == 200:
             data = response.json()
             ic(data.keys(), data["artist"].keys())
-            if "artist" in data and "image" in data["artist"]:
-                images = data["artist"]["image"]
-                for img in images:
-                    if (
-                        img["size"] == "large"
-                    ):  # You can change the size to your preference
-                        return img["#text"]
+            # if "artist" in data and "image" in data["artist"]:
+            #     images = data["artist"]["image"]
+            #     for img in images:
+            #         if (
+            #             img["size"] == "large"
+            #         ):  # You can change the size to your preference
+            #             return img["#text"]
         return None
 
 

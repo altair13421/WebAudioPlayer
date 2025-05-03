@@ -14,6 +14,8 @@ class LastFMArtist(models.Model):
     about_artist = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     lastfm_url = models.URLField(max_length=255, blank=True, null=True)
+    listeners = models.PositiveBigIntegerField(default=0)
+    playcount = models.PositiveBigIntegerField(default=0)
 
     def __str__(self):
         return f"Artist: {self.artist_name.title()}, Image Path: {self.image_path}"
