@@ -5,30 +5,40 @@ import re
 import os
 from bs4 import BeautifulSoup
 from django.conf import settings
-from .models import LastFMSettings
+from .models import LastFMArtist, LastFMSettings, LastFMImages
+from player.models import Artist
+
 
 class ImageFetcher:
     def __init__(self, artist):
         self.artist = artist
-        self.url = self.create_url(artist)
         try:
             lastfm_settings = LastFMSettings.objects.first()
             if not lastfm_settings:
                 assert False, "LastFMSettings not found."
-            assert lastfm_settings.api_key and lastfm_settings.api_key != "", "API key is missing"
-            assert lastfm_settings.api_secret and lastfm_settings.api_secret != "", "API secret is missing"
-            assert lastfm_settings.app_name and lastfm_settings.app_name != "", "App name is missing"
+            assert (
+                lastfm_settings.api_key and lastfm_settings.api_key != ""
+            ), "API key is missing"
+            assert (
+                lastfm_settings.api_secret and lastfm_settings.api_secret != ""
+            ), "API secret is missing"
+            assert (
+                lastfm_settings.app_name and lastfm_settings.app_name != ""
+            ), "App name is missing"
         except AssertionError as E:
             ic(E)
             api_key = input("Enter your LastFM API key: ")
             api_secret = input("Enter your LastFM API secret: ")
             app_name = input("Enter your LastFM app name: ")
             lastfm_settings = LastFMSettings.objects.create(
-                api_key=api_key,
-                api_secret=api_secret,
-                app_name=app_name
+                api_key=api_key, api_secret=api_secret, app_name=app_name
             )
-            ic('LastFMSettings created successfully.')
+            ic("LastFMSettings created successfully.")
+        finally:
+            self.api_key = lastfm_settings.api_key
+            self.base_url = "http://ws.audioscrobbler.com/2.0/"
+        self.artist_obj = self.get_artist_info()
+        self.url = self.create_url(artist)
 
     def create_url(self, artist):
         """
@@ -43,12 +53,62 @@ class ImageFetcher:
     def clean_url(self, url):
         return re.sub(r"/i/u/[^/]+/", "/i/u/", url)
 
+    def _create_artist_obj(self, artist):
+        """
+        Creates a LastFMArtist object if it doesn't exist.
+        :return: LastFMArtist object
+        """
+        artist_obj, created = LastFMArtist.objects.get_or_create(
+            name=artist.get("name"),
+            mbid=artist.get("mbid"),
+            defaults={
+                "about_artist": artist.get("about_artist"),
+                "lastfm_url": artist.get("lastfm_url"),
+                "listeners": artist.get("listeners"),
+                "playcount": artist.get("playcount"),
+            },
+        )
+        if created:
+            print(f"Artist created: {artist_obj.name}")
+            artist = Artist.objects.filter(name=artist_obj.name).first()
+            if artist:
+                artist.lastfm_ref = artist_obj
+                artist.save()
+                print(f"Artist reference updated: {artist.name}")
+        return artist_obj
+
     def get_artist_info(self):
-        ...
+        """
+        Fetches artist information from Last.fm.
+        :return: None
+        """
+        params = {
+            "method": "artist.getinfo",
+            "api_key": self.api_key,
+            "artist": self.artist,
+            "format": "json",
+        }
+        response = requests.get(self.base_url, params=params)
+        if response.status_code == 200:
+            data = response.json()
+            artist_data: dict = data.get("artist", {})
+            if artist_data != {}:
+                obj_data = {
+                    "mbid": artist_data.get("mbid"),
+                    "name": artist_data.get("name"),
+                    "about_artist": artist_data.get("bio", {}).get("content", ""),
+                    "lastfm_url": artist_data.get("bio", {})
+                    .get("links")
+                    .get("link", {})
+                    .get("href", ""),
+                    "listeners": artist_data.get("stats", {}).get("listeners", 0),
+                    "playcount": artist_data.get("stats", {}).get("playcount", 0),
+                }
+                return self._create_artist_obj(obj_data)
 
     def scrape_images(self):
         images = []
-        for i in range(1, 4):
+        for i in range(1, 2):
             html_file = requests.get(f"{self.url}{i}")
             if html_file.status_code == 200:
                 bs = BeautifulSoup(html_file.content, "html.parser")
@@ -59,7 +119,7 @@ class ImageFetcher:
                         image_url = image["src"]
                         if image_url:
                             images.append(self.clean_url(image_url))
-        self.write_images(images, self.artist)
+        self.write_images(images, self.artist_obj)
 
     def get_albums(self):
         """
@@ -70,7 +130,7 @@ class ImageFetcher:
 
     @staticmethod
     def write_images(
-        image_list: list[str] | str, artist: str = None, album: str = None
+        image_list: list[str] | str, artist_obj: LastFMArtist = None, album: str = None
     ):
         """
         Writes the image URLs to a file.
@@ -85,11 +145,14 @@ class ImageFetcher:
                 filename = f""
                 if album:
                     filename += os.path.join(
-                        settings.MEDIA_ROOT, artist, album, image.split("/")[-1]
+                        settings.MEDIA_ROOT,
+                        artist_obj.name,
+                        album,
+                        image.split("/")[-1],
                     )
                 else:
                     filename += os.path.join(
-                        settings.MEDIA_ROOT, artist, image.split("/")[-1]
+                        settings.MEDIA_ROOT, artist_obj.name, image.split("/")[-1]
                     )
                 # check if Extension is in the filename
                 if not filename.endswith((".jpg", ".jpeg", ".png")):
@@ -105,6 +168,14 @@ class ImageFetcher:
                     response = requests.get(image)
                     if response.status_code == 200:
                         f.write(response.content)
+                        image_created, created = LastFMImages.objects.get_or_create(
+                            image=filename.removeprefix(f"{settings.MEDIA_ROOT}/"),
+                            artist_ref=artist_obj,
+                        )
+                        if created:
+                            print(f"Image saved: {filename}")
+                        else:
+                            print(f"Image already exists in the database: {filename}")
                     else:
                         print(f"Failed to fetch image: {image}")
             else:
@@ -154,37 +225,3 @@ class LastFmImageFetcher:
                 if any(images):
                     return self._clean_url(images[0]["#text"])
         return None
-
-    def get_artist_image(self, artist):
-        """
-        Fetches the artist image URL from Last.fm.
-        :param artist: Name of the artist
-        :return: URL of the artist image or None if not found
-        """
-        params = {
-            "method": "artist.getinfo",
-            "api_key": self.api_key,
-            "artist": artist,
-            "format": "json",
-        }
-        response = requests.get(self.base_url, params=params)
-        if response.status_code == 200:
-            data = response.json()
-            ic(data.keys(), data["artist"].keys())
-            # if "artist" in data and "image" in data["artist"]:
-            #     images = data["artist"]["image"]
-            #     for img in images:
-            #         if (
-            #             img["size"] == "large"
-            #         ):  # You can change the size to your preference
-            #             return img["#text"]
-        return None
-
-
-# Example usage:
-# api_key = "api_key_here"
-# fetcher = LastFmImageFetcher(api_key)
-# album_image = fetcher.get_album_image("Coldplay", "Parachutes")
-# artist_image = fetcher.get_artist_image("Coldplay")
-# print("Album Image URL:", album_image)
-# print("Artist Image URL:", artist_image)

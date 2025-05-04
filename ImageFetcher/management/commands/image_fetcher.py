@@ -13,7 +13,6 @@ class Command(BaseCommand):
         artist_name = options['artist']
         if artist_name:
             fetcher = ImageFetcher(artist_name)
-            
         else:
             self.stdout.write('No artist name provided, fetching all artists.')
         artists = Artist.objects.all()

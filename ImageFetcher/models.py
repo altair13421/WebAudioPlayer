@@ -10,7 +10,7 @@ class LastFMSettings(models.Model):
 # Create your models here.
 class LastFMArtist(models.Model):
     mbid = models.UUIDField(max_length=127)
-    artist_name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255)
     about_artist = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     lastfm_url = models.URLField(max_length=255, blank=True, null=True)
