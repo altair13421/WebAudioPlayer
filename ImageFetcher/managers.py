@@ -27,28 +27,12 @@ class ImageFetcher:
             ), "App name is missing"
         except AssertionError as E:
             ic(E)
-            if E == "LastFMSettings not found.":
-                print("LastFMSettings not found. Creating new settings.")
-                api_key = input("Enter your LastFM API key: ")
-                api_secret = input("Enter your LastFM API secret: ")
-                app_name = input("Enter your LastFM app name: ")
-                lastfm_settings, created = LastFMSettings.objects.get_or_create(
-                    api_key=api_key, api_secret=api_secret,
-                    defaults={"app_name": app_name}
-                )
-            elif E == "API key is missing":
-                print("API key is missing. Please enter it.")
-                api_key = input("Enter your LastFM API key: ")
-                lastfm_settings.api_key = api_key
-            elif E == "API secret is missing":
-                print("API secret is missing. Please enter it.")
-                api_secret = input("Enter your LastFM API secret: ")
-                lastfm_settings.api_secret = api_secret
-            elif E == "App name is missing":
-                print("App name is missing. Please enter it.")
-                app_name = input("Enter your LastFM app name: ")
-                lastfm_settings.app_name = app_name
-            lastfm_settings.save()
+            api_key = input("Enter your LastFM API key: ")
+            api_secret = input("Enter your LastFM API secret: ")
+            app_name = input("Enter your LastFM app name: ")
+            lastfm_settings = LastFMSettings.objects.create(
+                api_key=api_key, api_secret=api_secret, app_name=app_name
+            )
             ic("LastFMSettings created successfully.")
         finally:
             self.api_key = lastfm_settings.api_key

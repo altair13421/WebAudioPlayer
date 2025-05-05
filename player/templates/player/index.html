@@ -1,735 +1,863 @@
-{% extends 'player/base.html' %}
-{% load django_bootstrap5 %}
-
+{% extends 'player/base.html' %} {% load django_bootstrap5 %}
 {% block title %}Music Player - Home{% endblock %}
 
 {% block content %}
 
 <div class="app-container">
-    <!-- Add this right after the opening body tag for the expandable album art -->
+  <!-- Add this right after the opening body tag for the expandable album art -->
 
-    <!-- Search Bar -->
-    <div class="search-wrapper">
-        <div class="search-container">
-            <div class="input-group">
-                <span class="input-group-text bg-dark border-secondary">
-                    <i class="fas fa-search text-secondary"></i>
-                </span>
-                <input type="text" 
-                       id="search-input" 
-                       class="form-control bg-dark border-secondary text-light" 
-                       placeholder="Search songs, artists, or albums...">
-            </div>
-        </div>
+  <!-- Search Bar -->
+  <div class="search-wrapper">
+    <div class="search-container">
+      <div class="input-group flex">
+        <span class="input-group-text bg-dark border-secondary">
+          <i class="fas fa-search text-secondary"></i>
+        </span>
+        <input
+          type="text"
+          id="search-input"
+          class="form-control bg-dark border-secondary text-light"
+          placeholder="Search songs, artists, or albums..."
+        />
+        <a href='#' class="btn btn-secondary text-secondary">Update Database</a>
+      </div>
     </div>
+  </div>
 
-    <!-- Main Content Area -->
-    <div class="content-wrapper">
-        <div class="library-section">
-            <!-- Tabs Navigation -->
-            <ul class="nav nav-tabs" id="libraryTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="tracks-tab" data-bs-toggle="tab" data-bs-target="#tracks" type="button" role="tab">
-                        <i class="fas fa-music me-2"></i>Tracks
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="artists-tab" data-bs-toggle="tab" data-bs-target="#artists" type="button" role="tab">
-                        <i class="fas fa-users me-2"></i>Artists
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="albums-tab" data-bs-toggle="tab" data-bs-target="#albums" type="button" role="tab">
-                        <i class="fas fa-compact-disc me-2"></i>Albums
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="folders-tab" data-bs-toggle="tab" data-bs-target="#folders" type="button" role="tab">
-                        <i class="fas fa-folder me-2"></i>Folders
-                    </button>
-                </li>
-            </ul>
+  <!-- Main Content Area -->
+  <div class="content-wrapper">
+    <div class="library-section">
+      <!-- Tabs Navigation -->
+      <ul class="nav nav-tabs" id="libraryTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link active"
+            id="tracks-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#tracks"
+            type="button"
+            role="tab"
+          >
+            <i class="fas fa-music me-2"></i>Tracks
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link"
+            id="artists-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#artists"
+            type="button"
+            role="tab"
+          >
+            <i class="fas fa-users me-2"></i>Artists
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link"
+            id="albums-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#albums"
+            type="button"
+            role="tab"
+          >
+            <i class="fas fa-compact-disc me-2"></i>Albums
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link"
+            id="folders-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#folders"
+            type="button"
+            role="tab"
+          >
+            <i class="fas fa-folder me-2"></i>Folders
+          </button>
+        </li>
+      </ul>
 
-            <!-- Tab Content -->
-            <div class="tab-content" id="libraryTabsContent">
-                <!-- Tracks List -->
-                <div class="tab-pane fade show active" id="tracks" role="tabpanel">
-                    <div class="tracks-list">
-                        {% for track in tracks %}
-                        <div class="track-item" data-track-id="{{ track.id }}" data-title="{{ track.title }}" data-artist="{% for artist in track.artist.all %}{{ artist.name }}{% endfor %}" data-album="{{ track.album.title }}">
-                            <div class="d-flex align-items-center">
-                                <div class="track-number me-3">{{ forloop.counter }}</div>
-                                <div class="track-info flex-grow-1">
-                                    <div class="track-title">{{ track.title }}</div>
-                                    <div class="track-subtitle">
-                                        {% for artist in track.artist.all %}{{ artist.name }}{% endfor %} - {{ track.album.title }}
-                                    </div>
-                                </div>
-                                <div class="track-actions">
-                                    <button class="btn btn-link btn-sm edit-track" data-track-id="{{ track.id }}">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn btn-link btn-sm remove-track" data-track-id="{{ track.id }}">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        {% empty %}
-                        <div class="no-tracks-message">
-                            <p>No tracks found. Scan a directory to add music.</p>
-                        </div>
-                        {% endfor %}
-                    </div>
+      <!-- Tab Content -->
+      <div class="tab-content" id="libraryTabsContent">
+        <!-- Tracks List -->
+        <div class="tab-pane fade show active" id="tracks" role="tabpanel">
+          <div class="tracks-list">
+            {% for track in tracks %}
+            <div
+              class="track-item"
+              data-track-id="{{ track.id }}"
+              data-title="{{ track.title }}"
+              data-artist="{% for artist in track.artist.all %}{{ artist.name }}{% endfor %}"
+              data-album="{{ track.album.title }}"
+            >
+              <div class="d-flex align-items-center">
+                <div class="track-number me-3">{{ forloop.counter }}</div>
+                <div class="track-info flex-grow-1">
+                  <div class="track-title">{{ track.title }}</div>
+                  <div class="track-subtitle">
+                    {% for artist in track.artist.all %}{{ artist.name }}
+                    {% endfor %} - {{ track.album.title }}
+                  </div>
                 </div>
-
-                <!-- Artists Tab -->
-                <div class="tab-pane fade" id="artists" role="tabpanel">
-                    <div class="row">
-                        {% for artist in artists %}
-                        <div class="col-md-3 mb-3">
-                            <div class="card h-100 shadow-sm flex flex-column-reverse">
-                                {% if artist.cover_art != "" %}
-                                <img 
-                                    src="data:image/png;base64,{{ artist.cover_art }}" 
-                                    alt="{{ artist.name }}" 
-                                    class="card-img-top"
-                                    style="height: 200px; object-fit: cover;"
-                                >
-                                {% else %}
-                                <div class="card-img-top bg-light text-center p-3">
-                                    <p class="text-muted">No Cover Art</p>
-                                </div>
-                                {% endif %}
-
-                                <div>
-                                    <h6 class="mb-0">{{ artist.name }}</h6>
-                                    <small class="text-muted">{{ artist.tracks.count }} tracks</small>
-                                </div>
-                                <button class="btn btn-sm btn-outline-primary" onclick="filterByArtist({{ artist.id }})">
-                                    <i class="fas fa-filter"></i>
-                                </button>
-                            </div>
-                        </div>
-                        {% empty %}
-                        <p class="text-center">No artists found.</p>
-                        {% endfor %}
-                    </div>
+                <div class="track-actions">
+                  <button
+                    class="btn btn-link btn-sm edit-track"
+                    data-track-id="{{ track.id }}"
+                  >
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button
+                    class="btn btn-link btn-sm remove-track"
+                    data-track-id="{{ track.id }}"
+                  >
+                    <i class="fas fa-trash"></i>
+                  </button>
                 </div>
-
-                <!-- Albums Tab -->
-                <div class="tab-pane fade" id="albums" role="tabpanel">
-                    <div class="row">
-                        {% for album in albums %}
-                        <div class="col-md-3 mb-3">
-                            <div class="card h-100 shadow-sm flex flex-column-reverse" >
-                                {% if album.cover_art_base64 != "" %}
-                                <img 
-                                    src="data:image/png;base64,{{ album.cover_art_base64 }}" 
-                                    alt="{{ album.title }}" 
-                                    class="card-img-top"
-                                    style="height: 200px; object-fit: cover;"
-                                >
-                                {% else %}
-                                <div class="card-img-top bg-light text-center p-3">
-                                    <p class="text-muted">No Cover Art</p>
-                                </div>
-                                {% endif %}
-                                
-                                <div class="card-body d-flex flex-column">
-                                    <h6 class="card-title mb-1">{{ album.title }}</h6>
-                                    <p class="text-muted mb-2">{{ album.artist.name }}</p>
-                                    <small class="text-muted mb-2">{{ album.tracks.count }} tracks</small>
-                                    
-                                    <button 
-                                        class="btn btn-sm btn-outline-primary float-right" 
-                                        onclick="filterByAlbum({{ album.id }})"
-                                    >
-                                        <i class="fas fa-filter"></i> Filter
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        {% empty %}
-                        <div class="col-md-12 text-center">
-                            <p class="text-muted">No albums found.</p>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-
-                <!-- Folders Tab -->
-                <div class="tab-pane fade" id="folders" role="tabpanel">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">Scan Music Directory</h5>
-                            <form action="{% url 'scan_directory' %}" method="post">
-                                {% csrf_token %}
-                                <div class="mb-3">
-                                    <label for="directory_path" class="form-label">Directory Path</label>
-                                    <input type="text" class="form-control" id="directory_path" name="directory_path" required>
-                                </div>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-folder-open me-2"></i>Scan Directory
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+              </div>
             </div>
+            {% empty %}
+            <div class="no-tracks-message">
+              <p>No tracks found. Scan a directory to add music.</p>
+            </div>
+            {% endfor %}
+          </div>
         </div>
-    </div>
 
-    <!-- Fixed bottom player -->
-    <div class="player-bar">
-        <div class="player-content">
-            <!-- Left: Album art and track info -->
-            <div class="now-playing-section">
-                <div class="album-art">
-                    <img id="currentAlbumArt" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" alt="Album Art">
+        <!-- Artists Tab -->
+        <div class="tab-pane fade" id="artists" role="tabpanel">
+          <div class="row">
+            {% for artist in artists %}
+            <div class="col-md-3 mb-3">
+              <div class="card h-100 shadow-sm flex flex-column-reverse">
+                {% if artist.cover_art != "" %}
+                <img
+                  src="data:image/png;base64,{{ artist.cover_art }}"
+                  alt="{{ artist.name }}"
+                  class="card-img-top"
+                  style="height: 200px; object-fit: cover"
+                />
+                {% else %}
+                <div class="card-img-top bg-light text-center p-3">
+                  <p class="text-muted">No Cover Art</p>
                 </div>
-                <div class="track-info">
-                    <span id="nowPlayingTitle" class="track-title">No track selected</span>
-                    <span id="nowPlayingArtist" class="track-artist">-</span>
-                </div>
-            </div>
+                {% endif %}
 
-            <!-- Center: Player controls and progress -->
-            <div class="player-controls">
-                <div class="control-buttons">
-                    <button class="control-btn" id="prevButton">
-                        <i class="fas fa-step-backward"></i>
-                    </button>
-                    <button class="control-btn play-btn" id="playPauseButton">
-                        <i class="fas fa-play"></i>
-                    </button>
-                    <button class="control-btn" id="nextButton">
-                        <i class="fas fa-step-forward"></i>
-                    </button>
+                <div>
+                  <h6 class="mb-0">{{ artist.name }}</h6>
+                  <small class="text-muted"
+                    >{{ artist.tracks.count }} tracks</small
+                  >
                 </div>
-                <div class="progress-container">
-                    <span id="currentTime" class="time">0:00</span>
-                    <div class="progress">
-                        <div class="progress-bar" id="progressBar"></div>
-                    </div>
-                    <span id="duration" class="time">0:00</span>
-                </div>
-            </div>
-
-            <!-- Right: Volume control -->
-            <div class="volume-control">
-                <button class="control-btn" id="muteButton">
-                    <i class="fas fa-volume-up"></i>
+                <button
+                  class="btn btn-sm btn-outline-primary"
+                  onclick="filterByArtist({{ artist.id }})"
+                >
+                  <i class="fas fa-filter"></i>
                 </button>
-                <div class="volume-slider">
-                    <div class="progress">
-                        <div class="progress-bar" id="volumeBar"></div>
-                    </div>
-                </div>
+              </div>
             </div>
+            {% empty %}
+            <p class="text-center">No artists found.</p>
+            {% endfor %}
+          </div>
         </div>
+
+        <!-- Albums Tab -->
+        <div class="tab-pane fade" id="albums" role="tabpanel">
+          <div class="row">
+            {% for album in albums %}
+            <div class="col-md-3 mb-3">
+              <div class="card h-100 shadow-sm flex flex-column-reverse">
+                {% if album.cover_art_base64 != "" %}
+                <img
+                  src="data:image/png;base64,{{ album.cover_art_base64 }}"
+                  alt="{{ album.title }}"
+                  class="card-img-top"
+                  style="height: 200px; object-fit: cover"
+                />
+                {% else %}
+                <div class="card-img-top bg-light text-center p-3">
+                  <p class="text-muted">No Cover Art</p>
+                </div>
+                {% endif %}
+
+                <div class="card-body d-flex flex-column">
+                  <h6 class="card-title mb-1">{{ album.title }}</h6>
+                  <p class="text-muted mb-2">{{ album.artist.name }}</p>
+                  <small class="text-muted mb-2"
+                    >{{ album.tracks.count }} tracks</small
+                  >
+
+                  <button
+                    class="btn btn-sm btn-outline-primary float-right"
+                    onclick="filterByAlbum({{ album.id }})"
+                  >
+                    <i class="fas fa-filter"></i> Filter
+                  </button>
+                </div>
+              </div>
+            </div>
+            {% empty %}
+            <div class="col-md-12 text-center">
+              <p class="text-muted">No albums found.</p>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Folders Tab -->
+        <div class="tab-pane fade" id="folders" role="tabpanel">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Scan Music Directory</h5>
+              <form action="{% url 'scan_directory' %}" method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                  <label for="directory_path" class="form-label"
+                    >Directory Path</label
+                  >
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="directory_path"
+                    name="directory_path"
+                    required
+                  />
+                </div>
+                <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-folder-open me-2"></i>Scan Directory
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
+
+  <!-- Fixed bottom player -->
+  <div class="player-bar">
+    <div class="player-content">
+      <!-- Left: Album art and track info -->
+      <div class="now-playing-section">
+        <div class="album-art">
+          <img
+            id="currentAlbumArt"
+            src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+            alt="Album Art"
+          />
+        </div>
+        <div class="track-info">
+          <span id="nowPlayingTitle" class="track-title"
+            >No track selected</span
+          >
+          <span id="nowPlayingArtist" class="track-artist">-</span>
+        </div>
+      </div>
+
+      <!-- Center: Player controls and progress -->
+      <div class="player-controls">
+        <div class="control-buttons">
+          <button class="control-btn" id="prevButton">
+            <i class="fas fa-step-backward"></i>
+          </button>
+          <button class="control-btn play-btn" id="playPauseButton">
+            <i class="fas fa-play"></i>
+          </button>
+          <button class="control-btn" id="nextButton">
+            <i class="fas fa-step-forward"></i>
+          </button>
+        </div>
+        <div class="progress-container">
+          <span id="currentTime" class="time">0:00</span>
+          <div class="progress">
+            <div class="progress-bar" id="progressBar"></div>
+          </div>
+          <span id="duration" class="time">0:00</span>
+        </div>
+      </div>
+
+      <!-- Right: Volume control -->
+      <div class="volume-control">
+        <button class="control-btn" id="muteButton">
+          <i class="fas fa-volume-up"></i>
+        </button>
+        <div class="volume-slider">
+          <div class="progress">
+            <div class="progress-bar" id="volumeBar"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Edit Track Modal -->
 <div class="modal fade" id="editTrackModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content bg-dark">
-            <div class="modal-header">
-                <h5 class="modal-title">Edit Track</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="editTrackForm">
-                    <input type="hidden" id="track_id">
-                    <div class="mb-3">
-                        <label for="title" class="form-label">Title</label>
-                        <input type="text" class="form-control" id="title" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="artist" class="form-label">Artist</label>
-                        <input type="text" class="form-control" id="artist" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="album" class="form-label">Album</label>
-                        <input type="text" class="form-control" id="album" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="genre" class="form-label">Genre</label>
-                        <input type="text" class="form-control" id="genre">
-                    </div>
-                    <div class="mb-3">
-                        <label for="track_number" class="form-label">Track Number</label>
-                        <input type="number" class="form-control" id="track_number">
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="saveTrackChanges">Save changes</button>
-            </div>
-        </div>
+  <div class="modal-dialog">
+    <div class="modal-content bg-dark">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Track</h5>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form id="editTrackForm">
+          <input type="hidden" id="track_id" />
+          <div class="mb-3">
+            <label for="title" class="form-label">Title</label>
+            <input type="text" class="form-control" id="title" required />
+          </div>
+          <div class="mb-3">
+            <label for="artist" class="form-label">Artist</label>
+            <input type="text" class="form-control" id="artist" required />
+          </div>
+          <div class="mb-3">
+            <label for="album" class="form-label">Album</label>
+            <input type="text" class="form-control" id="album" required />
+          </div>
+          <div class="mb-3">
+            <label for="genre" class="form-label">Genre</label>
+            <input type="text" class="form-control" id="genre" />
+          </div>
+          <div class="mb-3">
+            <label for="track_number" class="form-label">Track Number</label>
+            <input type="number" class="form-control" id="track_number" />
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Close
+        </button>
+        <button type="button" class="btn btn-primary" id="saveTrackChanges">
+          Save changes
+        </button>
+      </div>
     </div>
+  </div>
 </div>
 
 <!-- Error Alert -->
 <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
-    <div id="errorAlert" class="toast align-items-center text-white bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="d-flex">
-            <div class="toast-body" id="errorMessage">
-                Error message here
-            </div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
+  <div
+    id="errorAlert"
+    class="toast align-items-center text-white bg-danger border-0"
+    role="alert"
+    aria-live="assertive"
+    aria-atomic="true"
+  >
+    <div class="d-flex">
+      <div class="toast-body" id="errorMessage">Error message here</div>
+      <button
+        type="button"
+        class="btn-close btn-close-white me-2 m-auto"
+        data-bs-dismiss="toast"
+        aria-label="Close"
+      ></button>
     </div>
+  </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-let currentTrack = null;
-let audio = new Audio();
-let isPlaying = false;
-let currentTrackIndex = -1;
-let lastVolume = 1.0;
-const tracks = Array.from(document.querySelectorAll('.track-item'));
+  let currentTrack = null;
+  let audio = new Audio();
+  let isPlaying = false;
+  let currentTrackIndex = -1;
+  let lastVolume = 1.0;
+  const tracks = Array.from(document.querySelectorAll(".track-item"));
 
-// Format time helper function
-function formatTime(seconds) {
-    if (!seconds || isNaN(seconds)) return '0:00';
+  // Format time helper function
+  function formatTime(seconds) {
+    if (!seconds || isNaN(seconds)) return "0:00";
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-}
+    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+  }
 
-// Update progress bar and time displays
-function updateProgress() {
+  // Update progress bar and time displays
+  function updateProgress() {
     if (!audio.duration) return;
-    
-    const progress = (audio.currentTime / audio.duration) * 100;
-    document.getElementById('progressBar').style.width = `${progress}%`;
-    document.getElementById('currentTime').textContent = formatTime(audio.currentTime);
-    document.getElementById('duration').textContent = formatTime(audio.duration);
-}
 
-function updateVolumeDisplay() {
-    const volumeIcon = document.querySelector('#muteButton i');
-    const volumeBar = document.getElementById('volumeBar');
-    
+    const progress = (audio.currentTime / audio.duration) * 100;
+    document.getElementById("progressBar").style.width = `${progress}%`;
+    document.getElementById("currentTime").textContent = formatTime(
+      audio.currentTime
+    );
+    document.getElementById("duration").textContent = formatTime(
+      audio.duration
+    );
+  }
+
+  function updateVolumeDisplay() {
+    const volumeIcon = document.querySelector("#muteButton i");
+    const volumeBar = document.getElementById("volumeBar");
+
     // Update volume bar width
     volumeBar.style.width = `${audio.volume * 100}%`;
-    
+
     // Update volume icon
-    volumeIcon.className = 'fas';
+    volumeIcon.className = "fas";
     if (audio.volume === 0) {
-        volumeIcon.classList.add('fa-volume-mute');
+      volumeIcon.classList.add("fa-volume-mute");
     } else if (audio.volume < 0.5) {
-        volumeIcon.classList.add('fa-volume-down');
+      volumeIcon.classList.add("fa-volume-down");
     } else {
-        volumeIcon.classList.add('fa-volume-up');
+      volumeIcon.classList.add("fa-volume-up");
     }
-}
+  }
 
-// Separate function for play/pause toggle
-function togglePlayPause() {
+  // Separate function for play/pause toggle
+  function togglePlayPause() {
     if (!audio.src) return; // Don't do anything if no track is loaded
-    
+
     if (isPlaying) {
-        audio.pause();
-        document.querySelector('#playPauseButton i').classList.replace('fa-pause', 'fa-play');
-        isPlaying = false;
+      audio.pause();
+      document
+        .querySelector("#playPauseButton i")
+        .classList.replace("fa-pause", "fa-play");
+      isPlaying = false;
     } else {
-        audio.play().catch(error => {
-            showError('Error playing track: ' + error.message);
-        });
-        document.querySelector('#playPauseButton i').classList.replace('fa-play', 'fa-pause');
-        isPlaying = true;
+      audio.play().catch((error) => {
+        showError("Error playing track: " + error.message);
+      });
+      document
+        .querySelector("#playPauseButton i")
+        .classList.replace("fa-play", "fa-pause");
+      isPlaying = true;
     }
-}
+  }
 
-// Separate function for stopping current audio
-function stopCurrentAudio() {
+  // Separate function for stopping current audio
+  function stopCurrentAudio() {
     if (audio) {
-        audio.pause();
-        audio.currentTime = 0;
-        audio.src = '';
-        
-        // Reset play button state
-        document.querySelector('#playPauseButton i').classList.replace('fa-pause', 'fa-play');
-        isPlaying = false;
-        
-        // Reset progress
-        document.querySelector('.progress-bar').style.width = '0%';
-        document.getElementById('currentTime').textContent = '0:00';
-        document.getElementById('duration').textContent = '0:00';
-    }
-}
+      audio.pause();
+      audio.currentTime = 0;
+      audio.src = "";
 
-// Main play track function
-function playTrack(trackId) {
+      // Reset play button state
+      document
+        .querySelector("#playPauseButton i")
+        .classList.replace("fa-pause", "fa-play");
+      isPlaying = false;
+
+      // Reset progress
+      document.querySelector(".progress-bar").style.width = "0%";
+      document.getElementById("currentTime").textContent = "0:00";
+      document.getElementById("duration").textContent = "0:00";
+    }
+  }
+
+  // Main play track function
+  function playTrack(trackId) {
     // If same track, just toggle play/pause
     if (currentTrack === trackId) {
-        togglePlayPause();
-        return;
+      togglePlayPause();
+      return;
     }
 
     // Stop current audio before playing new track
     stopCurrentAudio();
-    
+
     // Set new current track
     currentTrack = trackId;
-    
+
     // Store current volume
     const currentVolume = audio.volume;
-    
+
     // Create new audio object
     audio = new Audio();
     audio.volume = currentVolume;
-    
+
     // Set up event listeners
-    audio.addEventListener('timeupdate', updateProgress);
-    audio.addEventListener('loadedmetadata', () => {
-        document.getElementById('duration').textContent = formatTime(audio.duration);
-        updateProgress();
+    audio.addEventListener("timeupdate", updateProgress);
+    audio.addEventListener("loadedmetadata", () => {
+      document.getElementById("duration").textContent = formatTime(
+        audio.duration
+      );
+      updateProgress();
     });
-    audio.addEventListener('ended', () => {
-        document.querySelector('#playPauseButton i').classList.replace('fa-pause', 'fa-play');
-        isPlaying = false;
-        // Auto-play next track
-        if (currentTrackIndex < tracks.length - 1) {
-            currentTrackIndex++;
-            const nextTrackId = tracks[currentTrackIndex].dataset.trackId;
-            playTrack(nextTrackId);
-        }
+    audio.addEventListener("ended", () => {
+      document
+        .querySelector("#playPauseButton i")
+        .classList.replace("fa-pause", "fa-play");
+      isPlaying = false;
+      // Auto-play next track
+      if (currentTrackIndex < tracks.length - 1) {
+        currentTrackIndex++;
+        const nextTrackId = tracks[currentTrackIndex].dataset.trackId;
+        playTrack(nextTrackId);
+      }
     });
-    audio.addEventListener('error', (e) => {
-        console.error('Audio error:', e);
-        showError('Error loading audio file: ' + (e.target.error ? e.target.error.message : 'Unknown error'));
-        document.querySelector('#playPauseButton i').classList.replace('fa-pause', 'fa-play');
-        isPlaying = false;
+    audio.addEventListener("error", (e) => {
+      console.error("Audio error:", e);
+      showError(
+        "Error loading audio file: " +
+          (e.target.error ? e.target.error.message : "Unknown error")
+      );
+      document
+        .querySelector("#playPauseButton i")
+        .classList.replace("fa-pause", "fa-play");
+      isPlaying = false;
     });
 
     // Set source and play
     audio.src = `/track/${trackId}/play/`;
-    audio.play().then(() => {
+    audio
+      .play()
+      .then(() => {
         isPlaying = true;
-        document.querySelector('#playPauseButton i').classList.replace('fa-play', 'fa-pause');
-    }).catch(error => {
-        showError('Error playing track: ' + error.message);
-        document.querySelector('#playPauseButton i').classList.replace('fa-pause', 'fa-play');
+        document
+          .querySelector("#playPauseButton i")
+          .classList.replace("fa-play", "fa-pause");
+      })
+      .catch((error) => {
+        showError("Error playing track: " + error.message);
+        document
+          .querySelector("#playPauseButton i")
+          .classList.replace("fa-pause", "fa-play");
         isPlaying = false;
-    });
+      });
 
     // Update track info
     fetch(`/track/${trackId}/info/`)
-        .then(response => {
-            if (!response.ok) throw new Error('Track not found');
-            return response.json();
-        })
-        .then(updateNowPlayingInfo)
-        .catch(error => {
-            showError(error.message);
-            document.querySelector('#playPauseButton i').classList.replace('fa-pause', 'fa-play');
-            isPlaying = false;
-        });
-}
+      .then((response) => {
+        if (!response.ok) throw new Error("Track not found");
+        return response.json();
+      })
+      .then(updateNowPlayingInfo)
+      .catch((error) => {
+        showError(error.message);
+        document
+          .querySelector("#playPauseButton i")
+          .classList.replace("fa-pause", "fa-play");
+        isPlaying = false;
+      });
+  }
 
-// Event Listeners for controls
-document.getElementById('playPauseButton').addEventListener('click', () => {
+  // Event Listeners for controls
+  document.getElementById("playPauseButton").addEventListener("click", () => {
     if (currentTrack) {
-        togglePlayPause();
+      togglePlayPause();
     }
-});
+  });
 
-document.getElementById('nextButton').addEventListener('click', () => {
+  document.getElementById("nextButton").addEventListener("click", () => {
     if (currentTrackIndex < tracks.length - 1) {
-        currentTrackIndex++;
-        const trackId = tracks[currentTrackIndex].dataset.trackId;
-        playTrack(trackId);
+      currentTrackIndex++;
+      const trackId = tracks[currentTrackIndex].dataset.trackId;
+      playTrack(trackId);
     }
-});
+  });
 
-document.getElementById('prevButton').addEventListener('click', () => {
+  document.getElementById("prevButton").addEventListener("click", () => {
     if (currentTrackIndex > 0) {
-        currentTrackIndex--;
-        const trackId = tracks[currentTrackIndex].dataset.trackId;
-        playTrack(trackId);
+      currentTrackIndex--;
+      const trackId = tracks[currentTrackIndex].dataset.trackId;
+      playTrack(trackId);
     }
-});
+  });
 
-// Track item click handlers
-document.querySelectorAll('.track-item').forEach((track, index) => {
-    track.addEventListener('click', () => {
-        const trackId = track.dataset.trackId;
-        currentTrackIndex = index;
-        playTrack(trackId);
+  // Track item click handlers
+  document.querySelectorAll(".track-item").forEach((track, index) => {
+    track.addEventListener("click", () => {
+      const trackId = track.dataset.trackId;
+      currentTrackIndex = index;
+      playTrack(trackId);
     });
-});
+  });
 
-// Progress bar click handler
-document.querySelector('.progress-container .progress').addEventListener('click', (e) => {
-    if (!audio.duration) return;
-    
-    const rect = e.currentTarget.getBoundingClientRect();
-    const clickPosition = e.clientX - rect.left;
-    const newTime = (clickPosition / rect.width) * audio.duration;
-    
-    audio.currentTime = newTime;
-    updateProgress();
-});
+  // Progress bar click handler
+  document
+    .querySelector(".progress-container .progress")
+    .addEventListener("click", (e) => {
+      if (!audio.duration) return;
 
-// Keyboard controls
-document.addEventListener('keydown', (e) => {
-    if (e.target.tagName === 'INPUT') return;
-    
-    switch(e.code) {
-        case 'Space':
-            e.preventDefault();
-            if (currentTrack) {
-                togglePlayPause();
-            }
-            break;
-        case 'ArrowLeft':
-            if (audio.currentTime >= 5) {
-                audio.currentTime -= 5;
-            } else {
-                audio.currentTime = 0;
-            }
-            break;
-        case 'ArrowRight':
-            if (audio.currentTime + 5 < audio.duration) {
-                audio.currentTime += 5;
-            }
-            break;
+      const rect = e.currentTarget.getBoundingClientRect();
+      const clickPosition = e.clientX - rect.left;
+      const newTime = (clickPosition / rect.width) * audio.duration;
+
+      audio.currentTime = newTime;
+      updateProgress();
+    });
+
+  // Keyboard controls
+  document.addEventListener("keydown", (e) => {
+    if (e.target.tagName === "INPUT") return;
+
+    switch (e.code) {
+      case "Space":
+        e.preventDefault();
+        if (currentTrack) {
+          togglePlayPause();
+        }
+        break;
+      case "ArrowLeft":
+        if (audio.currentTime >= 5) {
+          audio.currentTime -= 5;
+        } else {
+          audio.currentTime = 0;
+        }
+        break;
+      case "ArrowRight":
+        if (audio.currentTime + 5 < audio.duration) {
+          audio.currentTime += 5;
+        }
+        break;
     }
-});
+  });
 
-// Clean up when leaving page
-window.addEventListener('beforeunload', () => {
+  // Clean up when leaving page
+  window.addEventListener("beforeunload", () => {
     stopCurrentAudio();
-});
+  });
 
-// Volume control
-document.querySelector('.volume-slider .progress').addEventListener('click', (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const clickPosition = e.clientX - rect.left;
-    const newVolume = Math.max(0, Math.min(1, clickPosition / rect.width));
-    
-    audio.volume = newVolume;
-    lastVolume = newVolume;
-    updateVolumeDisplay();
-});
+  // Volume control
+  document
+    .querySelector(".volume-slider .progress")
+    .addEventListener("click", (e) => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const clickPosition = e.clientX - rect.left;
+      const newVolume = Math.max(0, Math.min(1, clickPosition / rect.width));
 
-// Make the volume slider draggable
-const volumeSlider = document.querySelector('.volume-slider .progress');
-let isDragging = false;
+      audio.volume = newVolume;
+      lastVolume = newVolume;
+      updateVolumeDisplay();
+    });
 
-volumeSlider.addEventListener('mousedown', () => {
+  // Make the volume slider draggable
+  const volumeSlider = document.querySelector(".volume-slider .progress");
+  let isDragging = false;
+
+  volumeSlider.addEventListener("mousedown", () => {
     isDragging = true;
-});
+  });
 
-document.addEventListener('mousemove', (e) => {
+  document.addEventListener("mousemove", (e) => {
     if (!isDragging) return;
-    
+
     const rect = volumeSlider.getBoundingClientRect();
     const clickPosition = e.clientX - rect.left;
     const newVolume = Math.max(0, Math.min(1, clickPosition / rect.width));
-    
+
     audio.volume = newVolume;
     lastVolume = newVolume;
     updateVolumeDisplay();
-});
+  });
 
-document.addEventListener('mouseup', () => {
+  document.addEventListener("mouseup", () => {
     isDragging = false;
-});
+  });
 
-// Mute toggle
-document.getElementById('muteButton').addEventListener('click', () => {
+  // Mute toggle
+  document.getElementById("muteButton").addEventListener("click", () => {
     if (audio.volume > 0) {
-        lastVolume = audio.volume;
-        audio.volume = 0;
+      lastVolume = audio.volume;
+      audio.volume = 0;
     } else {
-        audio.volume = lastVolume;
+      audio.volume = lastVolume;
     }
     updateVolumeDisplay();
-});
+  });
 
-function showError(message) {
-    const errorAlert = document.getElementById('errorAlert');
-    const errorMessage = document.getElementById('errorMessage');
+  function showError(message) {
+    const errorAlert = document.getElementById("errorAlert");
+    const errorMessage = document.getElementById("errorMessage");
     errorMessage.textContent = message;
     const toast = new bootstrap.Toast(errorAlert);
     toast.show();
-}
+  }
 
-function updateNowPlayingInfo(data) {
+  function updateNowPlayingInfo(data) {
     // Update track info
-    document.getElementById('nowPlayingTitle').textContent = data.title;
-    document.getElementById('nowPlayingArtist').textContent = `${data.artist} - ${data.album}`;
-    
+    document.getElementById("nowPlayingTitle").textContent = data.title;
+    document.getElementById(
+      "nowPlayingArtist"
+    ).textContent = `${data.artist} - ${data.album}`;
+
     // Update album art
-    const albumArt = document.getElementById('currentAlbumArt');
+    const albumArt = document.getElementById("currentAlbumArt");
     if (data.cover_art) {
-        albumArt.src = `data:image/png;base64,${data.cover_art}`;
+      albumArt.src = `data:image/png;base64,${data.cover_art}`;
     } else {
-        albumArt.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+      albumArt.src =
+        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
     }
-    
+
     // Update expanded view if it's active
-    if (expandedAlbumArt.classList.contains('active')) {
-        updateExpandedView(data);
+    if (expandedAlbumArt.classList.contains("active")) {
+      updateExpandedView(data);
     }
-}
+  }
 
-// Edit Track Functionality
-document.querySelectorAll('.edit-track').forEach(button => {
-    button.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const trackId = button.dataset.trackId;
-        fetch(`/track/${trackId}/info/`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Track not found');
-                }
-                return response.json();
-            })
-            .then(data => {
-                document.getElementById('track_id').value = data.id;
-                document.getElementById('title').value = data.title;
-                document.getElementById('artist').value = data.artist;
-                document.getElementById('album').value = data.album;
-                document.getElementById('genre').value = data.genre || '';
-                document.getElementById('track_number').value = data.track_number || '';
-                
-                new bootstrap.Modal(document.getElementById('editTrackModal')).show();
-            })
-            .catch(error => {
-                showError(error.message);
-            });
+  // Edit Track Functionality
+  document.querySelectorAll(".edit-track").forEach((button) => {
+    button.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const trackId = button.dataset.trackId;
+      fetch(`/track/${trackId}/info/`)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Track not found");
+          }
+          return response.json();
+        })
+        .then((data) => {
+          document.getElementById("track_id").value = data.id;
+          document.getElementById("title").value = data.title;
+          document.getElementById("artist").value = data.artist;
+          document.getElementById("album").value = data.album;
+          document.getElementById("genre").value = data.genre || "";
+          document.getElementById("track_number").value =
+            data.track_number || "";
+
+          new bootstrap.Modal(document.getElementById("editTrackModal")).show();
+        })
+        .catch((error) => {
+          showError(error.message);
+        });
     });
-});
+  });
 
-document.getElementById('saveTrackChanges').addEventListener('click', () => {
-    const trackId = document.getElementById('track_id').value;
+  document.getElementById("saveTrackChanges").addEventListener("click", () => {
+    const trackId = document.getElementById("track_id").value;
     const formData = new FormData();
-    formData.append('title', document.getElementById('title').value);
-    formData.append('artist', document.getElementById('artist').value);
-    formData.append('album', document.getElementById('album').value);
-    formData.append('genre', document.getElementById('genre').value);
-    formData.append('track_number', document.getElementById('track_number').value);
+    formData.append("title", document.getElementById("title").value);
+    formData.append("artist", document.getElementById("artist").value);
+    formData.append("album", document.getElementById("album").value);
+    formData.append("genre", document.getElementById("genre").value);
+    formData.append(
+      "track_number",
+      document.getElementById("track_number").value
+    );
 
     fetch(`/track/${trackId}/update/`, {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-        }
+      method: "POST",
+      body: formData,
+      headers: {
+        "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]")
+          .value,
+      },
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === 'success') {
-            location.reload();
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.status === "success") {
+          location.reload();
         }
-    })
-    .catch(error => {
-        showError('Error updating track: ' + error.message);
-    });
-});
+      })
+      .catch((error) => {
+        showError("Error updating track: " + error.message);
+      });
+  });
 
-// Remove Track Functionality
-document.querySelectorAll('.remove-track').forEach(button => {
-    button.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (confirm('Are you sure you want to remove this track from the library?')) {
-            const trackId = button.dataset.trackId;
-            fetch(`/track/${trackId}/remove/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    location.reload();
-                }
-            })
-            .catch(error => {
-                showError('Error removing track: ' + error.message);
-            });
-        }
+  // Remove Track Functionality
+  document.querySelectorAll(".remove-track").forEach((button) => {
+    button.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (
+        confirm("Are you sure you want to remove this track from the library?")
+      ) {
+        const trackId = button.dataset.trackId;
+        fetch(`/track/${trackId}/remove/`, {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]")
+              .value,
+          },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.status === "success") {
+              location.reload();
+            }
+          })
+          .catch((error) => {
+            showError("Error removing track: " + error.message);
+          });
+      }
     });
-});
+  });
 
-// Filter Functions
-function filterByArtist(artistId) {
+  // Filter Functions
+  function filterByArtist(artistId) {
     // Implement artist filtering
-    console.log('Filtering by artist:', artistId);
-}
+    console.log("Filtering by artist:", artistId);
+  }
 
-function filterByAlbum(albumId) {
+  function filterByAlbum(albumId) {
     // Implement album filtering
-    console.log('Filtering by album:', albumId);
-}
+    console.log("Filtering by album:", albumId);
+  }
 
-// Add this to your existing JavaScript
-document.getElementById('search-input').addEventListener('input', function(e) {
-    const searchTerm = e.target.value.toLowerCase();
-    const tracks = document.querySelectorAll('.track-item');
-    
-    tracks.forEach(track => {
+  // Add this to your existing JavaScript
+  document
+    .getElementById("search-input")
+    .addEventListener("input", function (e) {
+      const searchTerm = e.target.value.toLowerCase();
+      const tracks = document.querySelectorAll(".track-item");
+
+      tracks.forEach((track) => {
         const title = track.dataset.title.toLowerCase();
         const artist = track.dataset.artist.toLowerCase();
         const album = track.dataset.album.toLowerCase();
-        
-        if (title.includes(searchTerm) || 
-            artist.includes(searchTerm) || 
-            album.includes(searchTerm)) {
-            track.style.display = '';
+
+        if (
+          title.includes(searchTerm) ||
+          artist.includes(searchTerm) ||
+          album.includes(searchTerm)
+        ) {
+          track.style.display = "";
         } else {
-            track.style.display = 'none';
+          track.style.display = "none";
         }
+      });
     });
-});
 
-// Expanded Album Art functionality
-const expandedAlbumArt = document.getElementById('expandedAlbumArt');
-const albumArtTrigger = document.getElementById('albumArtTrigger');
-const expandedAlbumImage = document.getElementById('expandedAlbumImage');
-const expandedTrackTitle = document.getElementById('expandedTrackTitle');
-const expandedArtistAlbum = document.getElementById('expandedArtistAlbum');
+  // Expanded Album Art functionality
+  const expandedAlbumArt = document.getElementById("expandedAlbumArt");
+  const albumArtTrigger = document.getElementById("albumArtTrigger");
+  const expandedAlbumImage = document.getElementById("expandedAlbumImage");
+  const expandedTrackTitle = document.getElementById("expandedTrackTitle");
+  const expandedArtistAlbum = document.getElementById("expandedArtistAlbum");
 
-// Toggle expanded album art
-function toggleExpandedAlbumArt() {
-    expandedAlbumArt.classList.toggle('active');
-}
+  // Toggle expanded album art
+  function toggleExpandedAlbumArt() {
+    expandedAlbumArt.classList.toggle("active");
+  }
 
-// Update expanded view with current track info
-function updateExpandedView(data) {
-    expandedAlbumImage.src = document.getElementById('currentAlbumArt').src;
+  // Update expanded view with current track info
+  function updateExpandedView(data) {
+    expandedAlbumImage.src = document.getElementById("currentAlbumArt").src;
     expandedTrackTitle.textContent = data.title;
     expandedArtistAlbum.textContent = `${data.artist} - ${data.album}`;
-}
+  }
 
-// Event Listeners
-albumArtTrigger.addEventListener('click', () => {
-    if (currentTrack) {  // Only expand if a track is playing
-        toggleExpandedAlbumArt();
+  // Event Listeners
+  albumArtTrigger.addEventListener("click", () => {
+    if (currentTrack) {
+      // Only expand if a track is playing
+      toggleExpandedAlbumArt();
     }
-});
+  });
 
-expandedAlbumArt.addEventListener('click', (e) => {
+  expandedAlbumArt.addEventListener("click", (e) => {
     if (e.target === expandedAlbumArt) {
-        toggleExpandedAlbumArt();
+      toggleExpandedAlbumArt();
     }
-});
+  });
 
-// Add keyboard listener for escape key to close expanded view
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && expandedAlbumArt.classList.contains('active')) {
-        toggleExpandedAlbumArt();
+  // Add keyboard listener for escape key to close expanded view
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && expandedAlbumArt.classList.contains("active")) {
+      toggleExpandedAlbumArt();
     }
-});
+  });
 </script>
-{% endblock %} 
+{% endblock %}
