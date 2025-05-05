@@ -21,7 +21,7 @@ class Artist(models.Model):
 
     @property
     def cover_art(self):
-        ...  # Placeholder for the cover art property
+        return self.lastfm_ref.any_image.image if self.lastfm_ref else None
 
     def __str__(self):
         return self.name
