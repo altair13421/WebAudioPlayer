@@ -1,5 +1,7 @@
 from django.db import models
-
+from random import choice
+from django.db.models.manager import BaseManager
+from django.db.models.query import QuerySet
 
 class LastFMSettings(models.Model):
     api_key = models.CharField(max_length=127)
@@ -9,7 +11,7 @@ class LastFMSettings(models.Model):
 
 # Create your models here.
 class LastFMArtist(models.Model):
-    mbid = models.UUIDField(max_length=127)
+    mbid = models.UUIDField(max_length=127, null=True, blank=True)
     name = models.CharField(max_length=255)
     about_artist = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -18,7 +20,15 @@ class LastFMArtist(models.Model):
     playcount = models.PositiveBigIntegerField(default=0)
 
     def __str__(self):
-        return f"Artist: {self.artist_name.title()}, Image Path: {self.image_path}"
+        return f"Artist: {self.name.title()}"
+
+    @property
+    def all_images(self) -> BaseManager["LastFMImages"]:
+        return self.images.all()
+
+    @property
+    def any_image(self):
+        return choice(self.all_images)
 
 
 class LastFMAlbum(models.Model):
@@ -32,7 +42,7 @@ class LastFMAlbum(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Album: {self.album.title}, Image Path: {self.image_path}"
+        return f"Album: {self.album.title}"
     class Meta:
         abstract = True
         verbose_name = "LastFM Album"
@@ -51,7 +61,7 @@ class LastFMTrack(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Track: {self.track_name.title}, Image Path: {self.image_path}"
+        return f"Track: {self.track_name.title}"
 
     class Meta:
         abstract = True
@@ -60,7 +70,7 @@ class LastFMTrack(models.Model):
 
 
 class LastFMImages(models.Model):
-    image = models.FilePathField()
+    image = models.CharField(max_length=255)
     artist_ref = models.ForeignKey(
         LastFMArtist,
         on_delete=models.CASCADE,
