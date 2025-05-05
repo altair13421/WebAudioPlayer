@@ -4,9 +4,13 @@ from django.urls import path
 
 from rest_framework.routers import DefaultRouter
 from .views import (
-    LastFMArtistViewSet,
+    LastFMArtistModelViewSet,
 )
 
 # Create a router and register our viewsets with it.
-router = DefaultRouter(prefix="api")
-router.register(r"lastfm/artist", LastFMArtistViewSet)
+router = DefaultRouter()
+router.register(r"lastfm/artist", LastFMArtistModelViewSet)
+
+urlpatterns = []
+urlpatterns += router.urls
+

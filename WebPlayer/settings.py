@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'player.apps.PlayerConfig',
     'ImageFetcher.apps.ImageFetcherConfig',
     'django_bootstrap5',
+    "rest_framework",
+    "whitenoise.runserver_nostatic",
 ]
 
 MIDDLEWARE = [
@@ -170,3 +172,13 @@ MESSAGE_TAGS = {
     messages.ERROR: 'alert alert-danger',
 }
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+        # Default renderer - do not include
+        # 'rest_framework.renderers.TemplateRenderer',
+    ),
+    # ...
+}
+

@@ -3,6 +3,7 @@ from random import choice
 from django.db.models.manager import BaseManager
 from django.db.models.query import QuerySet
 
+
 class LastFMSettings(models.Model):
     api_key = models.CharField(max_length=127)
     api_secret = models.CharField(max_length=127)
@@ -28,7 +29,11 @@ class LastFMArtist(models.Model):
 
     @property
     def any_image(self):
-        return choice(self.all_images)
+        try:
+            img_choice = choice(self.all_images)
+        except IndexError:
+            img_choice = None
+        return img_choice
 
 
 class LastFMAlbum(models.Model):
@@ -43,10 +48,12 @@ class LastFMAlbum(models.Model):
 
     def __str__(self):
         return f"Album: {self.album.title}"
+
     class Meta:
         abstract = True
         verbose_name = "LastFM Album"
         verbose_name_plural = "LastFM Albums"
+
 
 class LastFMTrack(models.Model):
     mbid = models.UUIDField()
