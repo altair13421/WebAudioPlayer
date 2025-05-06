@@ -1,7 +1,5 @@
 {% extends 'player/base.html' %} {% load django_bootstrap5 %}
-{% block title %}Music Player - Home{% endblock %}
-
-{% block content %}
+{% block title %}Music Player - Home{% endblock %} {% block content %}
 
 <div class="app-container">
   <!-- Add this right after the opening body tag for the expandable album art -->
@@ -19,7 +17,7 @@
           class="form-control bg-dark border-secondary text-light"
           placeholder="Search songs, artists, or albums..."
         />
-        <a href='#' class="btn btn-secondary text-secondary">Update Database</a>
+        <a href="#" class="btn btn-secondary text-secondary">Update Database</a>
       </div>
     </div>
   </div>
@@ -130,17 +128,22 @@
           <div class="row">
             {% for artist in artists %}
             <div class="col-md-3 mb-3">
-              <div class="card h-100 shadow-sm flex flex-column-reverse">
+              <div
+                class="card h-100 shadow-sm flex flex-column justify-content-between"
+              >
                 {% if artist.cover_art != "" %}
                 <img
-                  src="data:image/png;base64,{{ artist.cover_art }}"
+                  src="media/{{ artist.cover_art }}"
                   alt="{{ artist.name }}"
                   class="card-img-top"
                   style="height: 200px; object-fit: cover"
                 />
                 {% else %}
-                <div class="card-img-top bg-light text-center p-3">
-                  <p class="text-muted">No Cover Art</p>
+                <div
+                  class="card-img-top bg-dark text-center p-3"
+                  style="height: 200px; object-fit: cover"
+                >
+                  <p class="text-muted">No Cover Art Found</p>
                 </div>
                 {% endif %}
 
@@ -154,7 +157,7 @@
                   class="btn btn-sm btn-outline-primary"
                   onclick="filterByArtist({{ artist.id }})"
                 >
-                  <i class="fas fa-filter"></i>
+                  <i class="fas fa-filter"></i> Filter
                 </button>
               </div>
             </div>
@@ -169,7 +172,9 @@
           <div class="row">
             {% for album in albums %}
             <div class="col-md-3 mb-3">
-              <div class="card h-100 shadow-sm flex flex-column-reverse">
+              <div
+                class="card h-100 shadow-sm flex flex-column justify-content-between"
+              >
                 {% if album.cover_art_base64 != "" %}
                 <img
                   src="data:image/png;base64,{{ album.cover_art_base64 }}"
@@ -178,7 +183,10 @@
                   style="height: 200px; object-fit: cover"
                 />
                 {% else %}
-                <div class="card-img-top bg-light text-center p-3">
+                <div
+                  class="card-img-top bg-light text-center p-3"
+                  style="height: 200px; object-fit: cover"
+                >
                   <p class="text-muted">No Cover Art</p>
                 </div>
                 {% endif %}
@@ -363,9 +371,7 @@
     </div>
   </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
+{% endblock %} {% block extra_js %}
 <script>
   let currentTrack = null;
   let audio = new Audio();

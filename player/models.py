@@ -4,6 +4,7 @@ import os
 from django.db.models.manager import BaseManager
 from random import choice
 from icecream import ic
+
 # Create your models here.
 
 
@@ -21,13 +22,14 @@ class Artist(models.Model):
 
     @property
     def cover_art(self):
-        return self.lastfm_ref.any_image.image if self.lastfm_ref else None
+        return self.lastfm_ref.any_image.image if self.lastfm_ref else ""
 
     def __str__(self):
         return self.name
 
     class Meta:
         ordering = ["name"]
+
 
 class Genre(models.Model):
     name = models.CharField(max_length=100)

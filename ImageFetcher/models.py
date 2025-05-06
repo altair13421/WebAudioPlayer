@@ -31,8 +31,8 @@ class LastFMArtist(models.Model):
     def any_image(self):
         try:
             img_choice = choice(self.all_images)
-        except IndexError:
-            img_choice = None
+        except:
+            img_choice = ""
         return img_choice
 
 
