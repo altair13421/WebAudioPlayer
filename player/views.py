@@ -4,7 +4,7 @@ import os
 
 from django.db.models.manager import BaseManager
 from django.shortcuts import redirect, get_object_or_404
-from django.http import JsonResponse, FileResponse
+from django.http import JsonResponse, FileResponse, StreamingHttpResponse
 from django.contrib import messages
 from django.views import View
 from django.views.generic import ListView
@@ -51,8 +51,6 @@ class IndexView(ListView):
         return context
 
 
-
-
 class ScanDirectoryView(View):
 
     def post(self, request, *args, **kwargs):
@@ -65,98 +63,102 @@ class ScanDirectoryView(View):
         scanned_files = 0
         new_tracks = 0
 
-        for root, _, files in os.walk(directory_path):
-            for file in files:
-                if Path(file).suffix.lower() in audio_extensions:
-                    file_path = os.path.join(root, file)
-                    try:
-                        audio = MutagenFile(file_path)
-                        if audio is None:
-                            continue
-                        # ['TIT2', 'TPE1', 'TRCK', 'TALB', 'TPOS', 'TDRC', 'TCON', 'POPM:',
-                        # 'TPE2', 'TSRC', 'TSSE', 'TENC', 'WOAS', 'TCOP', 'COMM::XXX', 'APIC:Cover']
-                        title_mtg = audio.get("TIT2", "")
-                        title = title_mtg.text[0] if title_mtg != "" else ""
-                        artist_name_mtg = audio.get("TPE1", "")
-                        artist_names = (
-                            artist_name_mtg.text[0] if artist_name_mtg != "" else ""
-                        )
-                        orig_artist_mtg = audio.get("TPE2", "")
-                        orig_artist_name = (
-                            orig_artist_mtg.text[0] if orig_artist_mtg != "" else ""
-                        )
-                        album_title_mtg = audio.get("TALB", "")
-                        album = album_title_mtg.text[0] if album_title_mtg != "" else ""
-                        genres_mtg = audio.get("TCON", "")
-                        genres = genres_mtg.text[0].split() if genres_mtg != "" else ""
-                        cover_art_mtg = audio.get("APIC:Cover", "")
-                        cover_art = cover_art_mtg.data if cover_art_mtg != "" else ""
-                        date_mtg = audio.get("TDRC", "")
-                        release_date = (
-                            date_mtg.text[0] if date_mtg != "" else "0000-00-00"
-                        )
+        def processor_generator(directory_path):
+            nonlocal scanned_files
+            nonlocal new_tracks
+            for root, _, files in os.walk(directory_path):
+                for file in files:
+                    if Path(file).suffix.lower() in audio_extensions:
+                        file_path = os.path.join(root, file)
+                        try:
+                            audio = MutagenFile(file_path)
+                            if audio is None:
+                                continue
+                            # ['TIT2', 'TPE1', 'TRCK', 'TALB', 'TPOS', 'TDRC', 'TCON', 'POPM:',
+                            # 'TPE2', 'TSRC', 'TSSE', 'TENC', 'WOAS', 'TCOP', 'COMM::XXX', 'APIC:Cover']
 
-                        # Get or create artist
-                        artist_list = []
-                        if "/" in artist_names:
-                            for artist_name in artist_names.split("/"):
-                                artist, _ = Artist.objects.get_or_create(
-                                    name=artist_name
-                                )
+                            title_mtg = audio.get("TIT2", "")
+                            title = title_mtg.text[0] if title_mtg != "" else ""
+                            artist_name_mtg = audio.get("TPE1", "")
+                            artist_names = (
+                                artist_name_mtg.text[0] if artist_name_mtg != "" else ""
+                            )
+                            orig_artist_mtg = audio.get("TPE2", "")
+                            orig_artist_name = (
+                                orig_artist_mtg.text[0] if orig_artist_mtg != "" else ""
+                            )
+                            album_title_mtg = audio.get("TALB", "")
+                            album = album_title_mtg.text[0] if album_title_mtg != "" else ""
+                            genres_mtg = audio.get("TCON", "")
+                            genres = genres_mtg.text[0].split() if genres_mtg != "" else ""
+                            cover_art_mtg = audio.get("APIC:Cover", "")
+                            cover_art = cover_art_mtg.data if cover_art_mtg != "" else ""
+                            date_mtg = audio.get("TDRC", "")
+                            release_date = (
+                                date_mtg.text[0] if date_mtg != "" else "0000-00-00"
+                            )
+
+                            # Get or create artist
+                            artist_list = []
+                            if "/" in artist_names:
+                                for artist_name in artist_names.split("/"):
+                                    artist, _ = Artist.objects.get_or_create(
+                                        name=artist_name
+                                    )
+                                    artist_list.append(artist)
+                                artist = Artist.objects.get(name=orig_artist_name)
+                            else:
+                                artist, _ = Artist.objects.get_or_create(name=artist_names)
                                 artist_list.append(artist)
-                            artist = Artist.objects.get(name=orig_artist_name)
-                        else:
-                            artist, _ = Artist.objects.get_or_create(name=artist_names)
-                            artist_list.append(artist)
 
-                        # Get or create genre
-                        genre_list = []
-                        for genre in genres:
-                            genre, _ = Genre.objects.get_or_create(name=genre)
-                            genre_list.append(genre)
+                            # Get or create genre
+                            genre_list = []
+                            for genre in genres:
+                                genre, _ = Genre.objects.get_or_create(name=genre)
+                                genre_list.append(genre)
 
-                        # Get or create album
-                        if isinstance(cover_art, str):
-                            cover_art = cover_art.encode("utf-8")
-                        album, _ = Album.objects.get_or_create(
-                            title=album, artist=artist,
-                            defaults={
-                                "cover_art":cover_art,
-                            }
-                        )
-                        # Create track if it doesn't exist
+                            # Get or create album
+                            if isinstance(cover_art, str):
+                                cover_art = cover_art.encode("utf-8")
+                            album, _ = Album.objects.get_or_create(
+                                title=album,
+                                artist=artist,
+                                defaults={
+                                    "cover_art": cover_art,
+                                },
+                            )
+                            # Create track if it doesn't exist
 
-                        track, created = Track.objects.get_or_create(
-                            title=title, 
-                            album=album,
-                            defaults={
-                                "file_path": f"{file_path}",
-                                "duration": (
-                                    audio.info.length
-                                    if hasattr(audio.info, "length")
-                                    else None
-                                ),
-                                "is_valid": True,
-                            },
-                        )
-                        if created:
-                            for artist in artist_list:
-                                track.artist.add(artist)
-                            for genre in genre_list:
-                                track.genre.add(genre)
-                            new_tracks += 1
-                            track.save()
-                        scanned_files += 1
+                            track, created = Track.objects.get_or_create(
+                                title=title,
+                                album=album,
+                                defaults={
+                                    "file_path": f"{file_path}",
+                                    "duration": (
+                                        audio.info.length
+                                        if hasattr(audio.info, "length")
+                                        else None
+                                    ),
+                                    "is_valid": True,
+                                },
+                            )
+                            if created:
+                                for artist in artist_list:
+                                    track.artist.add(artist)
+                                for genre in genre_list:
+                                    track.genre.add(genre)
+                                new_tracks += 1
+                                track.save()
+                            scanned_files += 1
+                            yield f"data: Processed File {root}{os.sep}{file}. Files Scanned {scanned_files}. New {new_tracks} \n"
 
-                    except Exception as e:
-                        ic(e)
-                        messages.warning(request, f"Error processing {file}: {str(e)}")
-                        return redirect("index")
+                        except Exception as e:
+                            ic(e)
+                            messages.warning(request, f"Error processing {file}: {str(e)}")
+                            return redirect("index")
 
-        messages.success(
-            request, f"Scanned {scanned_files} files, added {new_tracks} new tracks"
-        )
-        return redirect("index")
+            yield f"data: Finished scanning. Total files scanned {scanned_files}. New Tracks are {new_tracks} \n\n"
+        return StreamingHttpResponse(processor_generator(directory_path), content_type='text/event-stream')
 
 
 class PlayTrackView(View):
@@ -249,29 +251,33 @@ class GetTrackInfoView(View):
         try:
             # Get audio metadata using mutagen
             audio = MutagenFile(track.file_path)
-            
+
             # Calculate duration in a readable format
             duration = None
-            if hasattr(audio.info, 'length'):
-                duration = time.strftime('%M:%S', time.gmtime(audio.info.length))
+            if hasattr(audio.info, "length"):
+                duration = time.strftime("%M:%S", time.gmtime(audio.info.length))
 
             # Get bitrate if available
             bitrate = None
-            if hasattr(audio.info, 'bitrate'):
+            if hasattr(audio.info, "bitrate"):
                 bitrate = f"{audio.info.bitrate // 1000}kbps"
 
-            return JsonResponse({
-                "id": track.id,
-                "title": track.title,
-                "artist": ", ".join(artist.name for artist in track.artist.all()),
-                "album": track.album.title,
-                "cover_art": base64.b64encode(track.album.cover_art).decode('utf-8'),
-                "genre": ", ".join(genre.name for genre in track.genre.all()),
-                "duration": duration,
-                "bitrate": bitrate,
-                "track_number": track.track_number,
-                "file_format": track.get_file_extension().lstrip('.').upper()
-            })
+            return JsonResponse(
+                {
+                    "id": track.id,
+                    "title": track.title,
+                    "artist": ", ".join(artist.name for artist in track.artist.all()),
+                    "album": track.album.title,
+                    "cover_art": base64.b64encode(track.album.cover_art).decode(
+                        "utf-8"
+                    ),
+                    "genre": ", ".join(genre.name for genre in track.genre.all()),
+                    "duration": duration,
+                    "bitrate": bitrate,
+                    "track_number": track.track_number,
+                    "file_format": track.get_file_extension().lstrip(".").upper(),
+                }
+            )
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
 

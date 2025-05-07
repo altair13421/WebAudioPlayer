@@ -220,7 +220,7 @@
           <div class="card">
             <div class="card-body">
               <h5 class="card-title">Scan Music Directory</h5>
-              <form action="{% url 'scan_directory' %}" method="post">
+              <form id="scanForm" action="{% url 'scan_directory' %}" method="post">
                 {% csrf_token %}
                 <div class="mb-3">
                   <label for="directory_path" class="form-label"
@@ -238,6 +238,12 @@
                   <i class="fas fa-folder-open me-2"></i>Scan Directory
                 </button>
               </form>
+              <div id="scanMessages" style="display: none; margin-top: 20px;">
+                  <h4>Scan Progress</h4>
+                  <div id="messagesContainer" class="border p-2" style="max-height: 300px; overflow-y: auto;">
+                      <!-- Messages will appear here -->
+                  </div>
+              </div>
             </div>
           </div>
         </div>
@@ -845,25 +851,66 @@
     expandedArtistAlbum.textContent = `${data.artist} - ${data.album}`;
   }
 
-  // Event Listeners
-  albumArtTrigger.addEventListener("click", () => {
-    if (currentTrack) {
-      // Only expand if a track is playing
-      toggleExpandedAlbumArt();
-    }
-  });
 
-  expandedAlbumArt.addEventListener("click", (e) => {
-    if (e.target === expandedAlbumArt) {
-      toggleExpandedAlbumArt();
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('scanForm');
+    if (!form) {
+        console.error('Form not found.');
+        return;
     }
-  });
 
-  // Add keyboard listener for escape key to close expanded view
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && expandedAlbumArt.classList.contains("active")) {
-      toggleExpandedAlbumArt();
+    const messagesContainer = document.getElementById('messagesContainer');
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // Show the messages container
+        document.getElementById('scanMessages').style.display = 'block';
+        messagesContainer.innerHTML = '';
+
+        // Create a fetch stream
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': document.querySelector('[name="csrfmiddlewaretoken"]').value
+            },
+            body: new URLSearchParams(new FormData(form))
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.body.getReader();
+        })
+        .then(reader => {
+            processStream(reader);
+            window.location.reload();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            messagesContainer.innerHTML = 'An error occurred while scanning.';
+        });
+    });
+
+    async function processStream(reader) {
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            // Process the stream data
+            const text = new TextDecoder().decode(value);
+            const messages = text.split('\n').filter(line => line.startsWith('data:'));
+
+            messages.forEach(message => {
+                const data = message.replace('data: ', '');
+                const para = document.createElement('div');
+                para.textContent = data;
+                messagesContainer.appendChild(para);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            });
+        }
     }
-  });
+});
 </script>
 {% endblock %}
