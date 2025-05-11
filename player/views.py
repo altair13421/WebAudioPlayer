@@ -1,6 +1,9 @@
 import base64
+import json
 import sys
 import os
+import tracemalloc
+
 
 from django.db.models.manager import BaseManager
 from django.shortcuts import redirect, get_object_or_404
@@ -18,8 +21,9 @@ import mimetypes
 from urllib.parse import quote
 import time
 
-from .models import Artist, Album, Genre, Track
 from .forms import FolderSelectForm
+from .models import Artist, Album, Genre, Track
+from .utils import build_node, build_tree
 
 
 def album_art_writer(artist, album, file_data):
@@ -48,6 +52,15 @@ class IndexView(ListView):
         context["artists"] = Artist.objects.all()
         context["albums"] = Album.objects.all()
         context["genres"] = Genre.objects.all()
+        context["tree"] = []
+        tree_dict = build_tree(self.get_queryset())
+        for node in tree_dict:
+            context["tree"].append(build_node(node))
+        with open(
+            os.path.join(settings.BASE_DIR, "player", "tree.json"),
+            "w",
+        ) as file:
+            file.write(json.dumps(context["tree"], indent=2))
         return context
 
 
@@ -72,6 +85,9 @@ class ScanDirectoryView(View):
                         file_path = os.path.join(root, file)
                         try:
                             audio = MutagenFile(file_path)
+                            if Track.objects.filter(file_path=file_path).exists():
+                                yield f"data: Processed File {root}{os.sep}{file}. File Already Exists\n"
+                                continue
                             if audio is None:
                                 continue
                             # ['TIT2', 'TPE1', 'TRCK', 'TALB', 'TPOS', 'TDRC', 'TCON', 'POPM:',
@@ -88,11 +104,17 @@ class ScanDirectoryView(View):
                                 orig_artist_mtg.text[0] if orig_artist_mtg != "" else ""
                             )
                             album_title_mtg = audio.get("TALB", "")
-                            album = album_title_mtg.text[0] if album_title_mtg != "" else ""
+                            album = (
+                                album_title_mtg.text[0] if album_title_mtg != "" else ""
+                            )
                             genres_mtg = audio.get("TCON", "")
-                            genres = genres_mtg.text[0].split() if genres_mtg != "" else ""
+                            genres = (
+                                genres_mtg.text[0].split() if genres_mtg != "" else ""
+                            )
                             cover_art_mtg = audio.get("APIC:Cover", "")
-                            cover_art = cover_art_mtg.data if cover_art_mtg != "" else ""
+                            cover_art = (
+                                cover_art_mtg.data if cover_art_mtg != "" else ""
+                            )
                             date_mtg = audio.get("TDRC", "")
                             release_date = (
                                 date_mtg.text[0] if date_mtg != "" else "0000-00-00"
@@ -107,9 +129,11 @@ class ScanDirectoryView(View):
                                             name=artist_name
                                         )
                                         artist_list.append(artist)
-                                    artist = Artist.objects.get(name=orig_artist_name)
+                                    artist = artist_list[0]
                                 else:
-                                    artist, _ = Artist.objects.get_or_create(name=artist_names)
+                                    artist, _ = Artist.objects.get_or_create(
+                                        name=artist_names
+                                    )
                                     artist_list.append(artist)
                             else:
                                 artist, _ = Artist.objects.get_or_create(name="Unkown")
@@ -159,15 +183,20 @@ class ScanDirectoryView(View):
                                 new_tracks += 1
                                 track.save()
                             scanned_files += 1
-                            yield f"data: Processed File {root}{os.sep}{file}. Files Scanned {scanned_files}. New {new_tracks} \n"
+                            yield f"data: Processed File {root}{os.sep}{file}. Files Scanned {scanned_files}\n"
 
                         except Exception as e:
                             ic(e)
-                            messages.warning(request, f"Error processing {file}: {str(e)}")
+                            messages.warning(
+                                request, f"Error processing {file}: {str(e)}"
+                            )
                             return redirect("index")
 
             yield f"data: Finished scanning. Total files scanned {scanned_files}. New Tracks are {new_tracks} \n\n"
-        return StreamingHttpResponse(processor_generator(directory_path), content_type='text/event-stream')
+
+        return StreamingHttpResponse(
+            processor_generator(directory_path), content_type="text/event-stream"
+        )
 
 
 class PlayTrackView(View):

@@ -113,12 +113,17 @@ class ImageFetcher:
             if html_file.status_code == 200:
                 bs = BeautifulSoup(html_file.content, "html.parser")
                 images_a_s = bs.find_all("li", class_="image-list-item-wrapper")
-                for image_a in images_a_s:
-                    image = image_a.find("img")
+                # Adding a Limiter, so it doesn't scrape all the images.
+                i = 0
+                while i < 3:
+                    if len(images_a_s) == i:
+                        break
+                    image = images_a_s[i].find("img")
                     if image:
                         image_url = image["src"]
                         if image_url:
                             images.append(self.clean_url(image_url))
+                    i += 1
         self.write_images(images, self.artist_obj)
 
     def get_albums(self):

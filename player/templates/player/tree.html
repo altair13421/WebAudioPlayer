@@ -1,0 +1,52 @@
+
+<style>
+    .folder-tree {
+        padding-left: 20px;
+    }
+
+    .folder {
+        margin: 5px 0;
+        padding: 5px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+
+    .folder i {
+        margin-right: 5px;
+        color: #444;
+    }
+
+    .folder:hover {
+        background-color: #f5f5f5;
+    }
+
+    .file {
+        margin: 5px 0;
+        padding: 2px 5px;
+        color: #666;
+    }
+
+    .file i {
+        margin-right: 5px;
+    }
+
+    ul {
+        padding-left: 15px;
+    }
+
+    .fa-folder {
+        color: #4a90e2;
+    }
+
+    .fa-file {
+        color: #959595;
+    }
+</style>
+<div class="folder-tree">
+    <h1>Track Folder Structure</h1>
+    <ul>
+            {% for item in tree %}
+                {% include "player/track_tree_include.html" with item=item %}
+            {% endfor %}
+    </ul>
+</div>
