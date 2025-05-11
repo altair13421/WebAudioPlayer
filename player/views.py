@@ -100,15 +100,19 @@ class ScanDirectoryView(View):
 
                             # Get or create artist
                             artist_list = []
-                            if "/" in artist_names:
-                                for artist_name in artist_names.split("/"):
-                                    artist, _ = Artist.objects.get_or_create(
-                                        name=artist_name
-                                    )
+                            if artist_names != "":
+                                if "/" in artist_names:
+                                    for artist_name in artist_names.split("/"):
+                                        artist, _ = Artist.objects.get_or_create(
+                                            name=artist_name
+                                        )
+                                        artist_list.append(artist)
+                                    artist = Artist.objects.get(name=orig_artist_name)
+                                else:
+                                    artist, _ = Artist.objects.get_or_create(name=artist_names)
                                     artist_list.append(artist)
-                                artist = Artist.objects.get(name=orig_artist_name)
                             else:
-                                artist, _ = Artist.objects.get_or_create(name=artist_names)
+                                artist, _ = Artist.objects.get_or_create(name="Unkown")
                                 artist_list.append(artist)
 
                             # Get or create genre
@@ -116,8 +120,13 @@ class ScanDirectoryView(View):
                             for genre in genres:
                                 genre, _ = Genre.objects.get_or_create(name=genre)
                                 genre_list.append(genre)
+                            if len(genre_list) == 0:
+                                genre, _ = Genre.objects.get_or_create(name="Unknown")
+                                genre_list.append(genre)
 
                             # Get or create album
+                            if not album:
+                                album = "Unknown"
                             if isinstance(cover_art, str):
                                 cover_art = cover_art.encode("utf-8")
                             album, _ = Album.objects.get_or_create(
