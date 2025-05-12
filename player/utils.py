@@ -49,3 +49,7 @@ def build_node(node, level=0):
             "level": level,
             "is_folder": node.get("is_folder", False),
         }
+
+    # tree_dict = build_tree(self.get_queryset())
+    # for node in tree_dict:
+    #     context["tree"].append(build_node(node))

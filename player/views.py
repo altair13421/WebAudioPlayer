@@ -4,6 +4,7 @@ import sys
 import os
 import tracemalloc
 
+from django.http import JsonResponse
 
 from django.db.models.manager import BaseManager
 from django.shortcuts import redirect, get_object_or_404
@@ -53,16 +54,15 @@ class IndexView(ListView):
         context["albums"] = Album.objects.all()
         context["genres"] = Genre.objects.all()
         context["tree"] = []
-        tree_dict = build_tree(self.get_queryset())
-        for node in tree_dict:
-            context["tree"].append(build_node(node))
-        with open(
-            os.path.join(settings.BASE_DIR, "player", "tree.json"),
-            "w",
-        ) as file:
-            file.write(json.dumps(context["tree"], indent=2))
+        # tree_dict = build_tree(self.get_queryset())
+        # for node in tree_dict:
+        #     context["tree"].append(build_node(node))
+        # with open(
+        #     os.path.join(settings.BASE_DIR, "player", "tree.json"),
+        #     "w",
+        # ) as file:
+        #     file.write(json.dumps(context["tree"], indent=2))
         return context
-
 
 class ScanDirectoryView(View):
 
