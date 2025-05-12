@@ -1,6 +1,9 @@
 # views.py
 from django.db.models.manager import BaseManager
 from .models import Track
+import os
+
+
 def build_tree(tracks: BaseManager["Track"]) -> list[dict]:
     """
     Takes a list of Track objects and returns a hierarchical folder structure.
@@ -15,6 +18,7 @@ def build_tree(tracks: BaseManager["Track"]) -> list[dict]:
 
         # Omit the first two parts (e.g., '/' and 'home')
         relevant_path = path_parts[2:]
+        path_for_checking = "/".join(path_parts[:2])
 
         # Build the full path string for display
         display_path = "/".join(relevant_path)
@@ -26,7 +30,16 @@ def build_tree(tracks: BaseManager["Track"]) -> list[dict]:
         for part in relevant_path:
             if part not in current_level:
                 # Create a new node
-                current_level[part] = {"name": part, "children": {}}
+                current_level[part] = {
+                    "name": part,
+                    "children": {},
+                    "is_folder": os.path.isdir(
+                        os.path.join(
+                            *path_for_checking,
+                            *path_parts[: path_parts.index(part) + 1]
+                        )
+                    ),
+                }
             # Move to the next level
             current_level = current_level[part]["children"]
 
@@ -42,13 +55,13 @@ def build_node(node, level=0):
     Recursively builds the tree structure for the template.
     """
     return {
-            "name": node["name"],
-            "children": [
-                build_node(child, level + 1) for child in node["children"].values()
-            ],
-            "level": level,
-            "is_folder": node.get("is_folder", False),
-        }
+        "name": node["name"],
+        "children": [
+            build_node(child, level + 1) for child in node["children"].values()
+        ],
+        "level": level,
+        "is_folder": node.get("is_folder", False),
+    }
 
     # tree_dict = build_tree(self.get_queryset())
     # for node in tree_dict:

@@ -1,0 +1,124 @@
+<div class="tab-pane fade show active" id="tracks" role="tabpanel">
+    <div class="tracks-list">
+        {% for track in tracks %}
+        <div
+            class="track-item p-2 mb-1 rounded-2 border border-dark hover:shadow-lg hover:border-primary transition-all"
+            data-track-id="{{ track.id }}"
+            data-title="{{ track.title }}"
+            data-artist="{% for artist in track.artist.all %}{{ artist.name }}{% endfor %}"
+            data-album="{{ track.album.title }}"
+        >
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center">
+                    <div class="track-number me-2">
+                        <span class="badge rounded-pill bg-dark text-primary fs-7">{{ forloop.counter }}</span>
+                    </div>
+                    <div class="track-info">
+                        <div class="track-title font-weight-bold text-white text-truncate">{{ track.title }}</div>
+                        <div class="track-subtitle text-muted text-truncate small">
+                            {% for artist in track.artist.all %}{{ artist.name }}{% endfor %} - {{ track.album.title }}
+                        </div>
+                    </div>
+                </div>
+                <div class="track-actions d-flex align-items-center gap-1">
+                    <button
+                        class="btn btn-circle btn-sm edit-track hover:bg-primary hover:text-white rounded-3"
+                        data-track-id="{{ track.id }}"
+                    >
+                        <i class="fas fa-edit text-primary"></i>
+                    </button>
+                    <button
+                        class="btn btn-circle btn-sm remove-track hover:bg-danger hover:text-white rounded-3"
+                        data-track-id="{{ track.id }}"
+                    >
+                        <i class="fas fa-trash text-danger"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="no-tracks-message text-center p-4">
+            <div class="card bg-transparent border border-white border-opacity-10 rounded-2 p-3">
+                <div class="d-flex align-items-center justify-content-center gap-3">
+                    <i class="fas fa-music fs-4 text-secondary"></i>
+                    <p class="text-muted mb-0">No tracks found. Scan a directory to add music.</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Custom CSS -->
+<style>
+    /* Dark Mode Optimization */
+    .tracks-list {
+        background: rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(10px);
+        border-radius: 8px;
+        padding: 1rem;
+    }
+
+    /* Track Item */
+    .track-item {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .track-item:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Compact Design */
+    .track-title {
+        font-size: 0.9rem;
+        max-width: 200px;
+    }
+
+    .track-subtitle {
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+    }
+
+    /* Button Styling */
+    .btn-circle {
+        width: 25px;
+        height: 25px;
+        padding: 0;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-circle i {
+        font-size: 0.8rem;
+    }
+
+    /* Transition Effects */
+    .transition-all {
+        transition: all 0.3s ease;
+    }
+
+    /* No Tracks Message */
+    .no-tracks-message .card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #111;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #444;
+        border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #666;
+    }
+</style>

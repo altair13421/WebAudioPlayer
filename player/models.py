@@ -27,6 +27,23 @@ class Artist(models.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def album_count(self):
+        return self.albums.count()
+
+    @property
+    def track_count(self):
+        return self.tracks.count()
+
+    @property
+    def genres(self):
+        genres = set()
+        for album in self.albums.all():
+            for track in album.tracks.all():
+                for genre in track.genre.all():
+                    genres.add(genre)
+        return list(genres)
+
     class Meta:
         ordering = ["name"]
 
@@ -57,6 +74,10 @@ class Album(models.Model):
         return (
             base64.b64encode(self.cover_art).decode("utf-8") if self.cover_art else ""
         )
+
+    @property
+    def count(self):
+        return self.tracks.count()
 
     class Meta:
         ordering = ["title"]

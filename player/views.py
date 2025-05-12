@@ -1,8 +1,6 @@
 import base64
 import json
-import sys
 import os
-import tracemalloc
 
 from django.http import JsonResponse
 
@@ -53,7 +51,7 @@ class IndexView(ListView):
         context["artists"] = Artist.objects.all()
         context["albums"] = Album.objects.all()
         context["genres"] = Genre.objects.all()
-        context["tree"] = []
+        # context["tree"] = []
         # tree_dict = build_tree(self.get_queryset())
         # for node in tree_dict:
         #     context["tree"].append(build_node(node))

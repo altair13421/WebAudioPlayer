@@ -75,145 +75,33 @@
             <i class="fas fa-folder me-2"></i>Scan
           </button>
         </li>
+        <!-- <li class="nav-item" role="presentation">
+          <button
+            class="nav-link"
+            id="folder-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#folder"
+            type="button"
+            role="tab"
+          >
+            <i class="fas fa-folder me-2"></i>Scan
+          </button>
+        </li> -->
       </ul>
 
       <!-- Tab Content -->
       <div class="tab-content" id="libraryTabsContent">
         <!-- Tracks List -->
-        <div class="tab-pane fade show active" id="tracks" role="tabpanel">
-          <div class="tracks-list">
-            {% for track in tracks %}
-            <div
-              class="track-item"
-              data-track-id="{{ track.id }}"
-              data-title="{{ track.title }}"
-              data-artist="{% for artist in track.artist.all %}{{ artist.name }}{% endfor %}"
-              data-album="{{ track.album.title }}"
-            >
-              <div class="d-flex align-items-center">
-                <div class="track-number me-3">{{ forloop.counter }}</div>
-                <div class="track-info flex-grow-1">
-                  <div class="track-title">{{ track.title }}</div>
-                  <div class="track-subtitle">
-                    {% for artist in track.artist.all %}{{ artist.name }}
-                    {% endfor %} - {{ track.album.title }}
-                  </div>
-                </div>
-                <div class="track-actions">
-                  <button
-                    class="btn btn-link btn-sm edit-track"
-                    data-track-id="{{ track.id }}"
-                  >
-                    <i class="fas fa-edit"></i>
-                  </button>
-                  <button
-                    class="btn btn-link btn-sm remove-track"
-                    data-track-id="{{ track.id }}"
-                  >
-                    <i class="fas fa-trash"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
-            {% empty %}
-            <div class="no-tracks-message">
-              <p>No tracks found. Scan a directory to add music.</p>
-            </div>
-            {% endfor %}
-          </div>
-        </div>
+         {% include 'player/subs/tracks.html' with tracks=tracks %}
 
         <!-- Artists Tab -->
-        <div class="tab-pane fade" id="artists" role="tabpanel">
-          <div class="row">
-            {% for artist in artists %}
-            <div class="col-md-2 mb-2">
-              <div
-                class="card h-100 shadow-sm flex flex-column justify-content-between"
-              >
-                {% if artist.cover_art != "" %}
-                <img
-                  src="media/{{ artist.cover_art }}"
-                  alt="{{ artist.name }}"
-                  class="card-img-top"
-                  style="height: 200px; object-fit: cover"
-                  lazyload="lazy"
-                />
-                {% else %}
-                <div
-                  class="card-img-top bg-dark text-center p-3"
-                  style="height: 200px; object-fit: cover"
-                >
-                  <p class="text-muted">No Cover Art Found</p>
-                </div>
-                {% endif %}
-
-                <div>
-                  <h6 class="mb-0">{{ artist.name }}</h6>
-                  <small class="text-muted"
-                    >{{ artist.tracks.count }} tracks</small
-                  >
-                </div>
-                <button
-                  class="btn btn-sm btn-outline-primary"
-                  onclick="filterByArtist({{ artist.id }})"
-                >
-                  <i class="fas fa-filter"></i> Filter
-                </button>
-              </div>
-            </div>
-            {% empty %}
-            <p class="text-center">No artists found.</p>
-            {% endfor %}
-          </div>
-        </div>
-
+         {% include 'player/subs/artists.html' with artists=artists %}
         <!-- Albums Tab -->
-        <div class="tab-pane fade" id="albums" role="tabpanel">
-          <div class="row">
-            {% for album in albums %}
-            <div class="col-md-2 mb-2">
-              <div
-                class="card h-100 shadow-sm flex flex-column justify-content-between"
-              >
-                {% if album.cover_art_base64 != "" %}
-                <img
-                  src="data:image/png;base64,{{ album.cover_art_base64 }}"
-                  alt="{{ album.title }}"
-                  class="card-img-top"
-                  style="height: 200px; object-fit: cover"
-                  lazyload="lazy"
-                />
-                {% else %}
-                <div
-                  class="card-img-top bg-light text-center p-3"
-                  style="height: 200px; object-fit: cover"
-                >
-                  <p class="text-muted">No Cover Art</p>
-                </div>
-                {% endif %}
+         {% include 'player/subs/albums.html' with albums=albums %}
 
-                <div class="card-body d-flex flex-column">
-                  <h6 class="card-title mb-1">{{ album.title }}</h6>
-                  <p class="text-muted mb-2">{{ album.artist.name }}</p>
-                  <small class="text-muted mb-2"
-                    >{{ album.tracks.count }} tracks</small
-                  >
-
-                  <button
-                    class="btn btn-sm btn-outline-primary float-right"
-                    onclick="filterByAlbum({{ album.id }})"
-                  >
-                    <i class="fas fa-filter"></i> Filter
-                  </button>
-                </div>
-              </div>
-            </div>
-            {% empty %}
-            <div class="col-md-12 text-center">
-              <p class="text-muted">No albums found.</p>
-            </div>
-            {% endfor %}
+        <div class="tab-pane fade" id="folder" role="tabpanel">
+          <div class="card">
+            <!-- {% include 'player/tree.html' with tree=tree %} -->
           </div>
         </div>
 

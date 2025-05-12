@@ -1,0 +1,14 @@
+
+    <li>
+        <div class="folder">
+            <i class="fas fa-folder"></i>
+            {{ item.name }}
+        </div>
+        {% if item.children %}
+            <ul>
+                {% for child in item.children %}
+                    {% include "player/track_tree_include.html" with item=child %}
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </li>

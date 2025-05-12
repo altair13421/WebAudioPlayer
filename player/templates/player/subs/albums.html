@@ -1,0 +1,49 @@
+<!-- Albums Tab -->
+<div class="tab-pane fade" id="albums" role="tabpanel">
+    <div class="row g-4">
+        {% for album in albums %}
+        <div class="col-md-3 col-lg-2 mb-4">
+            <div class="card bg-transparent border-0 h-100" style="min-height: 460px;">
+                <div class="position-relative overflow-hidden rounded-3" style="height: 250px;">
+                    {% if album.cover_art_base64 != "" %}
+                    <img
+                        src="data:image/png;base64,{{ album.cover_art_base64 }}"
+                        alt="{{ album.title }}"
+                        class="card-img h-100 w-100 object-fit-cover"
+                        style="transition: transform 0.3s ease;"
+                        lazyload="lazy"
+                    />
+                    {% else %}
+                    <div
+                        class="bg-gradient text-white d-flex align-items-center justify-content-center h-100 rounded-3"
+                        style="background-image: linear-gradient(135deg, #1a1a1a, #2d2d2d);"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 24 24" fill="#fff">
+                            <path d="M14 3l7 7-7 7M14 3L7 10l7 7"/>
+                        </svg>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="card-body pt-3 pb-4 px-0 text-center">
+                    <h6 class="card-title mb-0 font-weight-bold text-truncate">{{ album.title }}</h6>
+                    <p class="text-muted mb-3 font-size-75 text-truncate">{{ album.artist.name }}</p>
+                    <div class="d-flex align-items-center justify-content-center gap-2">
+                        <span class="text-muted font-size-75">{{ album.count }} tracks</span>
+                        <button
+                            class="btn btn-outline-light btn-sm rounded-4 px-3 border-2 border-color hover:border-white hover:bg-white hover:text-dark transition-all"
+                            onclick="filterByAlbum({{ album.id }})"
+                        >
+                            <i class="fas fa-filter fs-6"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-md-12 text-center">
+            <p class="text-muted fs-5">No albums found.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
