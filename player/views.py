@@ -13,7 +13,6 @@ from django.views.generic import ListView
 from django.conf import settings
 
 from mutagen import File as MutagenFile
-from mutagen.easyid3 import EasyID3
 from pathlib import Path
 from icecream import ic
 import mimetypes
@@ -22,7 +21,6 @@ import time
 
 from .forms import FolderSelectForm
 from .models import Artist, Album, Genre, Track
-from .utils import build_node, build_tree
 
 
 def album_art_writer(artist, album, file_data):
@@ -51,15 +49,6 @@ class IndexView(ListView):
         context["artists"] = Artist.objects.all()
         context["albums"] = Album.objects.all()
         context["genres"] = Genre.objects.all()
-        # context["tree"] = []
-        # tree_dict = build_tree(self.get_queryset())
-        # for node in tree_dict:
-        #     context["tree"].append(build_node(node))
-        # with open(
-        #     os.path.join(settings.BASE_DIR, "player", "tree.json"),
-        #     "w",
-        # ) as file:
-        #     file.write(json.dumps(context["tree"], indent=2))
         return context
 
 class ScanDirectoryView(View):
@@ -232,12 +221,8 @@ class PlayTrackView(View):
             filename = file_path.name
             encoded_filename = quote(filename)
             response["Content-Disposition"] = f'inline; filename="{encoded_filename}"'
-            ic(
-                response["Accept-Ranges"],
-                response["Content-Length"],
-                response["Cache-Control"],
-                response["Content-Disposition"],
-            )
+            track.times_played += 1
+            track.save()
             return response
 
         except Exception as e:

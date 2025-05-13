@@ -1,7 +1,7 @@
 import base64
 from django.db import models
 import os
-from django.db.models.manager import BaseManager
+from django.db.models.manager import BaseManager, ManyToManyRelatedManager
 from random import choice
 from icecream import ic
 
@@ -91,6 +91,7 @@ class Track(models.Model):
     file_path = models.FilePathField(null=True, blank=True)
     duration = models.FloatField(default=0)
     track_number = models.PositiveIntegerField(null=True, blank=True)
+    times_played = models.PositiveIntegerField(default=0)
     created_at = models.DateField(null=True)
     is_valid = models.BooleanField(default=True)  # Flag to track if file still exists
 
@@ -117,6 +118,21 @@ class Playlist(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     songs = models.ManyToManyField(Track, related_name="playlist")
+
+    @property
+    def tracks(self)-> ManyToManyRelatedManager["Track"]:
+        return self.songs.all()
+
+    @property
+    def count(self):
+        return self.songs.count()
+
+    def __str__(self):
+        return f"Playlist: {self.name}|{self.count}"
+
+    @classmethod
+    def generate_name(self):
+        tracks = self.tracks
 
     class Meta:
         abstract = True

@@ -66,3 +66,15 @@ def build_node(node, level=0):
     # tree_dict = build_tree(self.get_queryset())
     # for node in tree_dict:
     #     context["tree"].append(build_node(node))
+
+def generate_playlist(count: int = 10) -> list[Track]:
+    """
+    Generates a playlist of random tracks.
+    :param count: Number of tracks to include in the playlist
+    :return: List of Track objects
+    """
+    return Track.objects.all()[:count]
+
+
+
+
