@@ -20,7 +20,7 @@ from urllib.parse import quote
 import time
 
 from .forms import FolderSelectForm
-from .models import Artist, Album, Genre, Track
+from .models import Artist, Album, Genre, PlayHistory, Track
 
 
 def album_art_writer(artist, album, file_data):
@@ -223,6 +223,10 @@ class PlayTrackView(View):
             response["Content-Disposition"] = f'inline; filename="{encoded_filename}"'
             track.times_played += 1
             track.save()
+            history, _ = PlayHistory.objects.create(
+                track=track,
+                playlist=None,  # Assuming this to None for now
+            )
             return response
 
         except Exception as e:

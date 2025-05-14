@@ -1,7 +1,8 @@
 import base64
+from tabnanny import verbose
 from django.db import models
 import os
-from django.db.models.manager import BaseManager, ManyToManyRelatedManager
+from django.db.models.manager import BaseManager
 from random import choice
 from icecream import ic
 
@@ -120,7 +121,7 @@ class Playlist(models.Model):
     songs = models.ManyToManyField(Track, related_name="playlist")
 
     @property
-    def tracks(self)-> ManyToManyRelatedManager["Track"]:
+    def tracks(self):
         return self.songs.all()
 
     @property
@@ -130,9 +131,33 @@ class Playlist(models.Model):
     def __str__(self):
         return f"Playlist: {self.name}|{self.count}"
 
+    class Meta:
+        verbose_name = "Playlist"
+        verbose_name_plural = "Playlists"
+        ordering = ["-created_at"]
+        # abstract = True
+
+class PlayHistory(models.Model):
+    track = models.ForeignKey(Track, on_delete=models.CASCADE, null=True, blank=True)
+    playlist = models.ForeignKey(Playlist, on_delete=models.CASCADE, null=True, blank=True)
+    played_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.track.title} - {self.playlist.name} - {self.played_at}"
+
+    def save(self, *args, **kwargs):
+        count = self.get_count()
+        if count >= 50:
+            # Remove the oldest record if there are already 100 records
+            oldest_record = self.__class__.objects.order_by("-played_at").last()
+            if oldest_record:
+                oldest_record.delete()
+        super().save(*args, **kwargs)
+
     @classmethod
-    def generate_name(self):
-        tracks = self.tracks
+    def get_count(cls):
+        return cls.objects.count()
 
     class Meta:
-        abstract = True
+        ordering = ["-played_at"]
+        # abstract = True
