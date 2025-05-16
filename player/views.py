@@ -29,7 +29,7 @@ def album_art_writer(artist, album, file_data):
         file_write.write(file_data)
 
 
-class IndexView(ListView):
+class v1IndexView(ListView):
     model = Track
     template_name = "player/index.html"
     context_object_name = "tracks"
@@ -142,9 +142,9 @@ class ScanDirectoryView(View):
                                 cover_art = cover_art.encode("utf-8")
                             album, _ = Album.objects.get_or_create(
                                 title=album,
-                                artist=artist,
                                 defaults={
                                     "cover_art": cover_art,
+                                    "artist": artist,
                                 },
                             )
                             # Create track if it doesn't exist
@@ -223,7 +223,7 @@ class PlayTrackView(View):
             response["Content-Disposition"] = f'inline; filename="{encoded_filename}"'
             track.times_played += 1
             track.save()
-            history, _ = PlayHistory.objects.create(
+            history = PlayHistory.objects.create(
                 track=track,
                 playlist=None,  # Assuming this to None for now
             )

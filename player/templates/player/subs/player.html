@@ -1,0 +1,392 @@
+
+  <!-- Fixed bottom player -->
+  <div class="player-bar">
+    <div class="player-content">
+      <!-- Left: Album art and track info -->
+      <div class="now-playing-section">
+        <div class="album-art">
+          <img
+            id="currentAlbumArt"
+            src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+            alt="Album Art"
+          />
+        </div>
+        <div class="track-info">
+          <span id="nowPlayingTitle" class="track-title"
+            >No track selected</span
+          >
+          <span id="nowPlayingArtist" class="track-artist">-</span>
+        </div>
+      </div>
+
+      <!-- Center: Player controls and progress -->
+      <div class="player-controls">
+        <div class="control-buttons">
+          <button class="control-btn" id="prevButton">
+            <i class="fas fa-step-backward"></i>
+          </button>
+          <button class="control-btn play-btn" id="playPauseButton">
+            <i class="fas fa-play"></i>
+          </button>
+          <button class="control-btn" id="nextButton">
+            <i class="fas fa-step-forward"></i>
+          </button>
+        </div>
+        <div class="progress-container">
+          <span id="currentTime" class="time">0:00</span>
+          <div class="progress">
+            <div class="progress-bar" id="progressBar"></div>
+          </div>
+          <span id="duration" class="time">0:00</span>
+        </div>
+      </div>
+
+      <!-- Right: Volume control -->
+      <div class="volume-control">
+        <button class="control-btn" id="muteButton">
+          <i class="fas fa-volume-up"></i>
+        </button>
+        <div class="volume-slider">
+          <div class="progress">
+            <div class="progress-bar" id="volumeBar"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+<script>
+
+  let currentTrack = null;
+  let audio = new Audio();
+  let isPlaying = false;
+  let currentTrackIndex = -1;
+  let lastVolume = 1.0;
+  const tracks = Array.from(document.querySelectorAll(".track-item"));
+
+  // Format time helper function
+  function formatTime(seconds) {
+    if (!seconds || isNaN(seconds)) return "0:00";
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+  }
+
+  // Update progress bar and time displays
+  function updateProgress() {
+    if (!audio.duration) return;
+
+    const progress = (audio.currentTime / audio.duration) * 100;
+    document.getElementById("progressBar").style.width = `${progress}%`;
+    document.getElementById("currentTime").textContent = formatTime(
+      audio.currentTime
+    );
+    document.getElementById("duration").textContent = formatTime(
+      audio.duration
+    );
+  }
+
+  function updateVolumeDisplay() {
+    const volumeIcon = document.querySelector("#muteButton i");
+    const volumeBar = document.getElementById("volumeBar");
+
+    // Update volume bar width
+    volumeBar.style.width = `${audio.volume * 100}%`;
+
+    // Update volume icon
+    volumeIcon.className = "fas";
+    if (audio.volume === 0) {
+      volumeIcon.classList.add("fa-volume-mute");
+    } else if (audio.volume < 0.5) {
+      volumeIcon.classList.add("fa-volume-down");
+    } else {
+      volumeIcon.classList.add("fa-volume-up");
+    }
+  }
+
+  // Separate function for play/pause toggle
+  function togglePlayPause() {
+    if (!audio.src) return; // Don't do anything if no track is loaded
+
+    if (isPlaying) {
+      audio.pause();
+      document
+        .querySelector("#playPauseButton i")
+        .classList.replace("fa-pause", "fa-play");
+      isPlaying = false;
+    } else {
+      audio.play().catch((error) => {
+        showError("Error playing track: " + error.message);
+      });
+      document
+        .querySelector("#playPauseButton i")
+        .classList.replace("fa-play", "fa-pause");
+      isPlaying = true;
+    }
+  }
+
+  // Separate function for stopping current audio
+  function stopCurrentAudio() {
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+      audio.src = "";
+
+      // Reset play button state
+      document
+        .querySelector("#playPauseButton i")
+        .classList.replace("fa-pause", "fa-play");
+      isPlaying = false;
+
+      // Reset progress
+      document.querySelector(".progress-bar").style.width = "0%";
+      document.getElementById("currentTime").textContent = "0:00";
+      document.getElementById("duration").textContent = "0:00";
+    }
+  }
+
+  // Main play track function
+  function playTrack(trackId) {
+    // If same track, just toggle play/pause
+    if (currentTrack === trackId) {
+      togglePlayPause();
+      return;
+    }
+
+    // Stop current audio before playing new track
+    stopCurrentAudio();
+
+    // Set new current track
+    currentTrack = trackId;
+
+    // Store current volume
+    const currentVolume = audio.volume;
+
+    // Create new audio object
+    audio = new Audio();
+    audio.volume = currentVolume;
+
+    // Set up event listeners
+    audio.addEventListener("timeupdate", updateProgress);
+    audio.addEventListener("loadedmetadata", () => {
+      document.getElementById("duration").textContent = formatTime(
+        audio.duration
+      );
+      updateProgress();
+    });
+    audio.addEventListener("ended", () => {
+      document
+        .querySelector("#playPauseButton i")
+        .classList.replace("fa-pause", "fa-play");
+      isPlaying = false;
+      // Auto-play next track
+      if (currentTrackIndex < tracks.length - 1) {
+        currentTrackIndex++;
+        const nextTrackId = tracks[currentTrackIndex].dataset.trackId;
+        playTrack(nextTrackId);
+      }
+    });
+    audio.addEventListener("error", (e) => {
+      console.error("Audio error:", e);
+      showError(
+        "Error loading audio file: " +
+          (e.target.error ? e.target.error.message : "Unknown error")
+      );
+      document
+        .querySelector("#playPauseButton i")
+        .classList.replace("fa-pause", "fa-play");
+      isPlaying = false;
+    });
+
+    // Set source and play
+    audio.src = `/track/${trackId}/play/`;
+    audio
+      .play()
+      .then(() => {
+        isPlaying = true;
+        document
+          .querySelector("#playPauseButton i")
+          .classList.replace("fa-play", "fa-pause");
+      })
+      .catch((error) => {
+        showError("Error playing track: " + error.message);
+        document
+          .querySelector("#playPauseButton i")
+          .classList.replace("fa-pause", "fa-play");
+        isPlaying = false;
+      });
+
+    // Update track info
+    fetch(`/track/${trackId}/info/`)
+      .then((response) => {
+        if (!response.ok) throw new Error("Track not found");
+        return response.json();
+      })
+      .then(updateNowPlayingInfo)
+      .catch((error) => {
+        showError(error.message);
+        document
+          .querySelector("#playPauseButton i")
+          .classList.replace("fa-pause", "fa-play");
+        isPlaying = false;
+      });
+  }
+
+  // Event Listeners for controls
+  document.getElementById("playPauseButton").addEventListener("click", () => {
+    if (currentTrack) {
+      togglePlayPause();
+    }
+  });
+
+  document.getElementById("nextButton").addEventListener("click", () => {
+    if (currentTrackIndex < tracks.length - 1) {
+      currentTrackIndex++;
+      const trackId = tracks[currentTrackIndex].dataset.trackId;
+      playTrack(trackId);
+    }
+  });
+
+  document.getElementById("prevButton").addEventListener("click", () => {
+    if (currentTrackIndex > 0) {
+      currentTrackIndex--;
+      const trackId = tracks[currentTrackIndex].dataset.trackId;
+      playTrack(trackId);
+    }
+  });
+
+  // Track item click handlers
+  document.querySelectorAll(".track-item").forEach((track, index) => {
+    track.addEventListener("click", () => {
+      const trackId = track.dataset.trackId;
+      currentTrackIndex = index;
+      playTrack(trackId);
+    });
+  });
+
+  // Progress bar click handler
+  document
+    .querySelector(".progress-container .progress")
+    .addEventListener("click", (e) => {
+      if (!audio.duration) return;
+
+      const rect = e.currentTarget.getBoundingClientRect();
+      const clickPosition = e.clientX - rect.left;
+      const newTime = (clickPosition / rect.width) * audio.duration;
+
+      audio.currentTime = newTime;
+      updateProgress();
+    });
+
+  // Keyboard controls
+  document.addEventListener("keydown", (e) => {
+    if (e.target.tagName === "INPUT") return;
+
+    switch (e.code) {
+      case "Space":
+        e.preventDefault();
+        if (currentTrack) {
+          togglePlayPause();
+        }
+        break;
+      case "ArrowLeft":
+        if (audio.currentTime >= 5) {
+          audio.currentTime -= 5;
+        } else {
+          audio.currentTime = 0;
+        }
+        break;
+      case "ArrowRight":
+        if (audio.currentTime + 5 < audio.duration) {
+          audio.currentTime += 5;
+        }
+        break;
+    }
+  });
+
+  // Clean up when leaving page
+  window.addEventListener("beforeunload", () => {
+    stopCurrentAudio();
+  });
+
+  // Volume control
+  document
+    .querySelector(".volume-slider .progress")
+    .addEventListener("click", (e) => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const clickPosition = e.clientX - rect.left;
+      const newVolume = Math.max(0, Math.min(1, clickPosition / rect.width));
+
+      audio.volume = newVolume;
+      lastVolume = newVolume;
+      updateVolumeDisplay();
+    });
+
+  // Make the volume slider draggable
+  const volumeSlider = document.querySelector(".volume-slider .progress");
+  let isDragging = false;
+
+  volumeSlider.addEventListener("mousedown", () => {
+    isDragging = true;
+  });
+
+  document.addEventListener("mousemove", (e) => {
+    if (!isDragging) return;
+
+    const rect = volumeSlider.getBoundingClientRect();
+    const clickPosition = e.clientX - rect.left;
+    const newVolume = Math.max(0, Math.min(1, clickPosition / rect.width));
+
+    audio.volume = newVolume;
+    lastVolume = newVolume;
+    updateVolumeDisplay();
+  });
+
+  document.addEventListener("mouseup", () => {
+    isDragging = false;
+  });
+
+  // Mute toggle
+  document.getElementById("muteButton").addEventListener("click", () => {
+    if (audio.volume > 0) {
+      lastVolume = audio.volume;
+      audio.volume = 0;
+    } else {
+      audio.volume = lastVolume;
+    }
+    updateVolumeDisplay();
+  });
+
+  function showError(message) {
+    const errorAlert = document.getElementById("errorAlert");
+    const errorMessage = document.getElementById("errorMessage");
+    errorMessage.textContent = message;
+    const toast = new bootstrap.Toast(errorAlert);
+    toast.show();
+  }
+
+  function updateNowPlayingInfo(data) {
+    // Update track info
+    document.getElementById("nowPlayingTitle").textContent = data.title;
+    document.getElementById(
+      "nowPlayingArtist"
+    ).textContent = `${data.artist} - ${data.album}`;
+
+    // Update album art
+    const albumArt = document.getElementById("currentAlbumArt");
+    if (data.cover_art) {
+      albumArt.src = `data:image/png;base64,${data.cover_art}`;
+    } else {
+      albumArt.src =
+        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+    }
+
+    // Update expanded view if it's active
+    if (expandedAlbumArt.classList.contains("active")) {
+      updateExpandedView(data);
+    }
+  }
+
+</script>
