@@ -1,0 +1,40 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Player</title>
+    <!-- Add your CSS files here -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <!-- Add your JS files here -->
+    <script src="{% static 'js/player.js' %}"></script>
+</head>
+<body>
+    <div class="wrapper">
+        <!-- Header Section -->
+        <header class="main-header">
+            <div class="header-content">
+                <h1>Music Player</h1>
+                <nav>
+                    <ul class="nav-links">
+                        <li><a href="#">Home</a></li>
+                        <li><a href="#">Your Library</a></li>
+                        <li><a href="#">Browse</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Main Content Section -->
+        <main class="main-content">
+            <!-- Content will be added here -->
+            {% block main_content %}
+            {% endblock %}
+        </main>
+
+    </div>
+
+</body>
+</html>

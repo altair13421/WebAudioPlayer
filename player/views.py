@@ -2,10 +2,11 @@ import base64
 import json
 import os
 
+from django import http
 from django.http import JsonResponse
 
 from django.db.models.manager import BaseManager
-from django.shortcuts import redirect, get_object_or_404
+from django.shortcuts import redirect, get_object_or_404, render
 from django.http import JsonResponse, FileResponse, StreamingHttpResponse
 from django.contrib import messages
 from django.views import View
@@ -140,6 +141,8 @@ class ScanDirectoryView(View):
                                 album = "Unknown"
                             if isinstance(cover_art, str):
                                 cover_art = cover_art.encode("utf-8")
+
+                            # Artist in defaults, because it is making multiple albums.
                             album, _ = Album.objects.get_or_create(
                                 title=album,
                                 defaults={
@@ -312,3 +315,8 @@ class RemoveTrackView(View):
         track = get_object_or_404(Track, id=track_id)
         track.delete()
         return JsonResponse({"status": "success"})
+
+class HomeView(View):
+    def get(self, request, *args, **kwargs):
+        return render(request, "main_content.html")
+

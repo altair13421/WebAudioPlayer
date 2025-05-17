@@ -124,7 +124,8 @@ class ImageFetcher:
                         if image_url:
                             images.append(self.clean_url(image_url))
                     i += 1
-        self.write_images(images, self.artist_obj)
+        # self.write_images(images, self.artist_obj)
+        self.write_img_urls(images, self.artist_obj)
 
     def get_albums(self):
         """
@@ -132,6 +133,34 @@ class ImageFetcher:
         :return: List of album names
         """
         ...
+
+    @staticmethod
+    def write_img_urls(image_list: list[str] | str, artist_obj: LastFMArtist = None, album: str = None):
+        """
+        Writes the image URLs to a file.
+        :param image_list: List of image URLs
+        :param artist_obj: LastFMArtist object
+        :param album: Name of the album
+        """
+        if isinstance(image_list, str):
+            image_list = [image_list]
+        for image in image_list:
+            if image:
+                if LastFMImages.objects.filter(image=image, artist=artist_obj).exists():
+                    print(f"Image already exists: {image}")
+                else:
+                    image_obj, created = LastFMImages.objects.get_or_create(
+                        image=image,
+                        artist_ref=artist_obj,
+                    )
+                    # check if Extension is in the filename
+                    if not image_obj.image.endswith((".jpg", ".jpeg", ".png")):
+                        image_obj.image += ".png"
+                    image_obj.save()
+                if created:
+                    print(f"Created image object for {image}")
+                else:
+                    print(f"Image object already exists for {image}")
 
     @staticmethod
     def write_images(

@@ -23,7 +23,7 @@ class Artist(models.Model):
 
     @property
     def cover_art(self):
-        return self.lastfm_ref.any_image.image if self.lastfm_ref else ""
+        return self.lastfm_ref.any_image.image_link if self.lastfm_ref else ""
 
     def __str__(self):
         return self.name

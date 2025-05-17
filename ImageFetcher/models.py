@@ -78,6 +78,7 @@ class LastFMTrack(models.Model):
 
 class LastFMImages(models.Model):
     image = models.CharField(max_length=255)
+    image_link = models.CharField(max_length=511)
     artist_ref = models.ForeignKey(
         LastFMArtist,
         on_delete=models.CASCADE,
