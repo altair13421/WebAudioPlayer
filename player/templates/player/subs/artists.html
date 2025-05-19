@@ -7,7 +7,7 @@
                 <div class="position-relative overflow-hidden rounded-3" style="height: 250px;">
                     {% if artist.cover_art != "" %}
                     <img
-                        src="/media/{{ artist.cover_art }}"
+                        src="{{ artist.cover_art }}"
                         alt="{{ artist.name }}"
                         class="card-img h-100 w-100 object-fit-cover"
                         style="transition: transform 0.3s ease;"

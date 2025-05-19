@@ -146,21 +146,19 @@ class ImageFetcher:
             image_list = [image_list]
         for image in image_list:
             if image:
-                if LastFMImages.objects.filter(image=image, artist=artist_obj).exists():
+                if LastFMImages.objects.filter(image_link=image, artist_ref=artist_obj).exists():
                     print(f"Image already exists: {image}")
                 else:
                     image_obj, created = LastFMImages.objects.get_or_create(
-                        image=image,
+                        image_link=image,
                         artist_ref=artist_obj,
                     )
                     # check if Extension is in the filename
-                    if not image_obj.image.endswith((".jpg", ".jpeg", ".png")):
-                        image_obj.image += ".png"
                     image_obj.save()
-                if created:
-                    print(f"Created image object for {image}")
-                else:
-                    print(f"Image object already exists for {image}")
+                    if created:
+                        print(f"Created image object for {image}")
+                    else:
+                        print(f"Image object already exists for {image}")
 
     @staticmethod
     def write_images(

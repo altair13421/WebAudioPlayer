@@ -15,7 +15,7 @@ class Artist(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     lastfm_ref = models.ForeignKey(
         "ImageFetcher.LastFMArtist",
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name="artist",
         null=True,
         blank=True,
