@@ -1,0 +1,76 @@
+<!-- Custom Scripts -->
+<script>
+// DOMContentLoaded ensures the script runs after the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Function to fetch data from the backend
+    function fetchData(url, successCallback, errorCallback) {
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => successCallback(data))
+            .catch(error => {
+                console.error('Error:', error);
+                errorCallback(error);
+            });
+    }
+
+    // Example button click handler
+    document.querySelectorAll('a.nav-link').forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault(); // Prevent default link behavior
+            // Extract the URL from the button
+            const url = e.target.getAttribute('href');
+            if (url !== "#") {
+                // Show loading state (if needed)
+                document.getElementById('content').innerHTML = '<h3>Loading...</h3>';
+                // Fetch data from the backend
+                fetchData(url, (data) => {
+                    // Update the content based on the fetched data
+                    const contentDiv = document.getElementById('content');
+                    contentDiv.innerHTML = `
+                        <h2>${data.title}</h2>
+                        <p>${data.description}</p>
+                    `;
+                }, (error) => {
+                    // Handle errors
+                    document.getElementById('content').innerHTML = `
+                        <div class="alert alert-danger">An error occurred: ${error.message}</div>
+                    `;
+                });
+            }
+        });
+    });
+
+    // Example: Fetch playlist data when "Browse" is clicked
+    const browseLink = document.querySelector('a.nav-link[href*="Browse"]');
+    browseLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        fetchData('/api/browse/', (data) => {
+            // Render the fetched playlist data
+            const contentDiv = document.getElementById('content');
+            contentDiv.innerHTML = `
+                <h2>Browse</h2>
+                <div class="row">
+                    ${data.playlists.map(playlist => `
+                        <div class="col-md-4 mb-3">
+                            <div class="card bg-dark text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">${playlist.name}</h5>
+                                    <p class="card-text">${playlist.description}</p>
+                                    <a href="#" class="btn btn-primary">Listen</a>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }, (error) => {
+            console.error('Error loading browse content:', error);
+        });
+    });
+});
+</script>
