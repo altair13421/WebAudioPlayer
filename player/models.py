@@ -29,6 +29,16 @@ class Artist(models.Model):
         return self.name
 
     @property
+    def info(self):
+        fm = self.lastfm_ref
+        return {
+            "name": self.name,
+            "listeners": fm.listeners if fm else 0,
+            "playcount": fm.playcount if fm else 0,
+            "bio": fm.about_artist if fm else "",
+        }
+
+    @property
     def album_count(self):
         return self.albums.count()
 

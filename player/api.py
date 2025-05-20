@@ -55,3 +55,16 @@ class PlaylistsViewSet(viewsets.ModelViewSet):
             return Response({"status": "Track added"})
         except Track.DoesNotExist:
             return Response({"error": "Track not found"}, status=404)
+
+class ArtistViewSet(viewsets.ModelViewSet):
+    """
+    A viewset for managing artists.
+    """
+    queryset = Artist.objects.all()
+    serializer_class = ArtistSerializer
+    lookup_field = "name"
+    lookup_url_kwarg = "name"
+    lookup_value_regex = "[^/]+"
+
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
