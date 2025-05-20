@@ -1,7 +1,8 @@
 # views.py
 from random import shuffle
 from django.db.models.manager import BaseManager
-from .models import Track
+from networkx import articulation_points
+from .models import Playlist, Track
 import os
 
 
@@ -104,6 +105,28 @@ def generate_top_played(count: int = 20) -> list[Track]:
             for genre in track.genre.all():
                 if genre not in genre_list:
                     genre_list.append(genre.name)
+
+    playlist = []
+
+    artist_tracks = all_tracks.filter(artist__name__in=artist_list)
+    genre_tracks = all_tracks.filter(genre__name__in=genre_list)
+    if artist_tracks.exists():
+        if artist_tracks.count() > 2:
+            artist_tracks = artist_tracks.order_by("-times_played")[:3]
+        else:
+            artist_tracks = artist_tracks.order_by("-times_played")
+    if genre_tracks.exists():
+        if genre_tracks.count() > 2:
+            genre_tracks = genre_tracks.order_by("-times_played")[:3]
+        else:
+            genre_tracks = genre_tracks.order_by("-times_played")
+    all_lists = [].extend(artist_tracks)
+    all_lists.extend(genre_tracks)
+    shuffle(all_lists)
+    playlist.extend(all_lists[:count])
+
+    Playlist.create_playlist(playlist)
+    return playlist
 
 def generate_curated(count: int = 20) -> list[Track]:
     """

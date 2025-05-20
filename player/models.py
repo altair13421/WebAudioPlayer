@@ -128,6 +128,47 @@ class Playlist(models.Model):
     def count(self):
         return self.songs.count()
 
+    @staticmethod
+    def create_playlist(playlist: list, name: str = None) -> "Playlist":
+        """Create a new playlist with the given tracks"""
+        if name in [None, ""]:
+            name = Playlist.generate_name(playlist)
+        playlist_obj = Playlist.objects.create(name=name)
+        for track in playlist:
+            playlist_obj.songs.add(track)
+        return playlist_obj
+
+    @staticmethod
+    def generate_name(playlist: list) -> str:
+        """Generate a random name for the playlist"""
+        adjectives = [
+            "Chill",
+            "Epic",
+            "Vibe",
+            "Groove",
+            "Mood",
+            "Feel",
+            "Relax",
+            "Energize",
+        ]
+        nouns = [
+            "Beats",
+            "Tunes",
+            "Melodies",
+            "Rhythms",
+            "Sounds",
+            "Tracks",
+            "Jams",
+        ]
+        genre_list = []
+        for track in playlist:
+            for genre in track.genre.all():
+                if genre.name not in genre_list:
+                    genre_list.append(genre.name)
+        if len(genre_list) > 0:
+            return f"{choice(adjectives)} {choice(genre_list)} {choice(nouns)}"
+        return f"{choice(adjectives)} {choice(nouns)}"
+
     def __str__(self):
         return f"Playlist: {self.name}|{self.count}"
 
