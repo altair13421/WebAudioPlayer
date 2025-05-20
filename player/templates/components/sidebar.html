@@ -1,22 +1,21 @@
 <div class="sidebar_card">
-  <span>In this article</span>
   <div class="sidebar_card__container">
-   <p class="playlist_element">Try it</p> 
-   <p class="playlist_element">Syntax</p> 
-   <p class="playlist_element active">Formal definition</p> 
-   <p class="playlist_element">Formal syntax</p> 
-   <p class="playlist_element">Examples</p> 
-   <p class="playlist_element">See also</p> 
+   <span>Recent Playlists</span>
+   <p class="playlist_element">Try it</p>
+   <p class="playlist_element">Syntax</p>
+   <p class="playlist_element active">Formal definition</p>
+   <p class="playlist_element">Formal syntax</p>
+   <p class="playlist_element">Examples</p>
+   <p class="playlist_element">See also</p>
   </div>
 </div>
 
 <style>
-/* From Uiverse.io by Javierrocadev */ 
+/* From Uiverse.io by Javierrocadev */
 .sidebar_card {
   width: 250px;
-  height: 290px;
-  border-radius: 15px;
-  background: rgb(27, 26, 26);
+  height: 100vh;
+  background: #1b1a1a;
   color: white;
   font-weight: 600;
   font-size: 1.2em;
@@ -24,7 +23,6 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  box-shadow: -5px 5px 1px 0px #004d92;
 }
 
 .playlist_element {
@@ -45,3 +43,10 @@
   color: #3775bb;
 }
 </style>
+
+<script>
+  // Add event listener to each element
+  const elements = document.querySelectorAll('.playlist_element');
+
+  // Need to Populate Playlist everytime the Page Loads..... From 
+</script>

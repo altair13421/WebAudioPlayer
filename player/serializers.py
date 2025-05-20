@@ -1,13 +1,13 @@
 from rest_framework import serializers
 from .models import Track, Artist, Album, Genre, Playlist
 
-class TrackSerializer(serializers.ReadOnlyModelSerializer):
+class TrackSerializer(serializers.ModelSerializer):
     class Meta:
         model = Track
         fields = "__all__"
 
 
-class ArtistSerializer(serializers.ReadOnlyModelSerializer):
+class ArtistSerializer(serializers.ModelSerializer):
     album_count = serializers.IntegerField(read_only=True)
     track_count = serializers.IntegerField(read_only=True)
     genres = serializers.ListField(child=serializers.CharField(), read_only=True)
@@ -16,13 +16,13 @@ class ArtistSerializer(serializers.ReadOnlyModelSerializer):
         model = Artist
         fields = "__all__"
 
-class GenreSerializer(serializers.ReadOnlyModelSerializer):
+class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Genre
         fields = "__all__"
         read_only_fields = ["id", "created_at", "updated_at"]
 
-class AlbumSerializer(serializers.ReadOnlyModelSerializer):
+class AlbumSerializer(serializers.ModelSerializer):
     cover_art_base64 = serializers.CharField(source="cover_art_base64", read_only=True)
     track_count = serializers.IntegerField(read_only=True)
 
@@ -30,7 +30,7 @@ class AlbumSerializer(serializers.ReadOnlyModelSerializer):
         model = Album
         fields = "__all__"
 
-class PlaylistSerializer(serializers.ReadOnlyModelSerializer):
+class PlaylistSerializer(serializers.ModelSerializer):
     class Meta:
         model = Playlist
         fields = "__all__"

@@ -1,8 +1,17 @@
 {% extends 'base.html' %}
 
-{% block main_content %}
-{% include 'components/artist_info.html' %}
-{% include 'components/currently_playing.html' %}
-{% include 'components/player_v2.html' %}
+{% block left_content %}
 {% include 'components/sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+
+{% include 'components/search.html' %}
+{% include 'components/player.html' %}
+{% endblock %}
+
+
+{% block right_content %}
+{% include 'components/currently_playing.html' %}
+{% include 'components/artist_info.html' %}
 {% endblock %}

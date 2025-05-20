@@ -1,12 +1,16 @@
 from django.urls import path
 from . import views
 
+from rest_framework.routers import DefaultRouter
+from .api import PlaylistsViewSet
+
+# Create a router and register our viewset with it.
+router = DefaultRouter()
+router.register(r"playlists", PlaylistsViewSet, basename="playlists")
+
+
 urlpatterns = [
     path("", views.HomeView.as_view(), name="index"),
-    
-    
-    
-    
     path("v1/", views.v1IndexView.as_view(), name="v1-index"),
     path("scan/", views.ScanDirectoryView.as_view(), name="scan_directory"),
     path(
@@ -28,3 +32,5 @@ urlpatterns = [
         name="remove_track",
     ),
 ]
+
+urlpatterns += router.urls
