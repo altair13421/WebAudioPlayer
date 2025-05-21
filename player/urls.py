@@ -6,7 +6,7 @@ from .api import PlaylistsViewSet
 
 # Create a router and register our viewset with it.
 router = DefaultRouter()
-router.register(r"playlists", PlaylistsViewSet, basename="playlists")
+router.register(r"api/playlists", PlaylistsViewSet, basename="playlists")
 
 
 urlpatterns = [

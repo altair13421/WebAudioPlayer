@@ -1,8 +1,10 @@
 # views.py
-from random import shuffle
+import random
 from django.db.models.manager import BaseManager
 from .models import Playlist, Track
 import os
+from icecream import ic
+from django.db.models import F
 
 
 def build_tree(tracks: BaseManager["Track"]) -> list[dict]:
@@ -68,13 +70,14 @@ def build_node(node, level=0):
     # for node in tree_dict:
     #     context["tree"].append(build_node(node))
 
+
 def generate_playlist(count: int = 20) -> list[Track]:
     """
     Generates a playlist of random tracks.
     :param count: Number of tracks to include in the playlist
     :return: List of Track objects
     """
-    random_playlist = shuffle(Track.objects.all())[:count]
+    random_playlist = random.shuffle(list(Track.objects.all()))[:count]
     return random_playlist
 
 
@@ -85,47 +88,69 @@ def generate_top_played(count: int = 20) -> list[Track]:
     :return: List of Track objects
     """
     all_tracks = Track.objects.all().prefetch_related("artist", "album", "genre")
-    actual_play_count = all_tracks.filter(times_played__gt=0).order_by("-times_played")[:count]
+    all_tracks_list = list(all_tracks)
+    random.shuffle(all_tracks_list)
+    actual_play_count = all_tracks.filter(times_played__gt=0).order_by("-times_played")[
+        :count
+    ]
     artist_list, genre_list = [], []
     if actual_play_count.count() > 0:
         # Get the first track's artist and genre
         for track in actual_play_count:
             for artist in track.artist.all():
-                if artist not in artist_list:
+                if artist.name not in artist_list:
                     artist_list.append(artist.name)
             for genre in track.genre.all():
-                if genre not in genre_list:
+                if genre.name not in genre_list:
                     genre_list.append(genre.name)
-    else:
-        for track in shuffle(all_tracks)[:count]:
+    if len(artist_list) < 5 or len(genre_list) < 5:
+        # If not enough artists or genres, shuffle the tracks and get more
+        for track in all_tracks_list[:count]:
             for artist in track.artist.all():
-                if artist not in artist_list:
+                if artist.name not in artist_list:
                     artist_list.append(artist.name)
-            for genre in track.genre.all():
+            for genre.name in track.genre.all():
                 if genre not in genre_list:
                     genre_list.append(genre.name)
 
     playlist = []
+    ic(artist_list, genre_list)
+
+    # remove Instrumental from the list
+    all_tracks = all_tracks.exclude(title__icontains="instrumental")
 
     artist_tracks = all_tracks.filter(artist__name__in=artist_list)
     genre_tracks = all_tracks.filter(genre__name__in=genre_list)
     if artist_tracks.exists():
-        if artist_tracks.count() > 2:
+        if artist_tracks.count() > 3:
             artist_tracks = artist_tracks.order_by("-times_played")[:3]
         else:
             artist_tracks = artist_tracks.order_by("-times_played")
     if genre_tracks.exists():
         if genre_tracks.count() > 2:
-            genre_tracks = genre_tracks.order_by("-times_played")[:3]
+            genre_tracks = genre_tracks.order_by("-times_played")[:12]
         else:
             genre_tracks = genre_tracks.order_by("-times_played")
-    all_lists = [].extend(artist_tracks)
-    all_lists.extend(genre_tracks)
-    shuffle(all_lists)
+    all_lists = []
+    for track in artist_tracks:
+        if not track in all_lists:
+            all_lists.append(track)
+    for track in genre_tracks:
+        if not track in all_lists:
+            all_lists.append(track)
+    random.shuffle(all_lists)
     playlist.extend(all_lists[:count])
+    all_tracks = all_tracks.exclude(id__in=[track.id for track in playlist])
+    # Add random tracks to fill the playlist
+    while len(playlist) < count:
+        random_track = random.choice(all_tracks)
+        if random_track not in playlist:
+            playlist.append(random_track)
 
-    Playlist.create_playlist(playlist)
-    return playlist
+    ic(playlist)
+    play = Playlist.create_playlist(playlist)
+    return play
+
 
 def generate_curated(count: int = 20) -> list[Track]:
     """
@@ -134,6 +159,3 @@ def generate_curated(count: int = 20) -> list[Track]:
     :return: List of Track objects
     """
     most_listened = Track.objects.all().order_by("-times_played")[:count]
-
-
-

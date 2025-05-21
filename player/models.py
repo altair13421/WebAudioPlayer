@@ -107,7 +107,7 @@ class Track(models.Model):
     is_valid = models.BooleanField(default=True)  # Flag to track if file still exists
 
     def __str__(self):
-        return f"{self.title} - {self.artist.name}"
+        return f"{self.title} - {"/".join([x.name for x in self.artist.all()])}"
 
     def get_file_extension(self):
         return os.path.splitext(self.file_path)[1]

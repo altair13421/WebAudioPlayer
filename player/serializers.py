@@ -5,7 +5,7 @@ from .models import Track, Artist, Album, Genre, Playlist
 class TrackSerializer(serializers.ModelSerializer):
     class Meta:
         model = Track
-        fields = "__all__"
+        exclude = ["file_path"]
 
 
 class GenreSerializer(serializers.ModelSerializer):

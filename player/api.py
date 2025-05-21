@@ -10,7 +10,7 @@ class PlaylistsViewSet(viewsets.ModelViewSet):
     A viewset for managing playlists.
     """
     # Define your queryset and serializer_class here
-    queryset = Playlist  # Replace with your actual queryset
+    queryset = Playlist.objects.all()  # Replace with your actual queryset
     serializer_class = PlaylistSerializer  # Replace with your actual serializer class
 
     def retrieve(self, request, *args, **kwargs):
