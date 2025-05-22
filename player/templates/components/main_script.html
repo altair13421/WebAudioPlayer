@@ -1,6 +1,10 @@
 <!-- Custom Scripts -->
 <script>
 // DOMContentLoaded ensures the script runs after the page loads
+
+const layerStack = [];
+
+
 document.addEventListener('DOMContentLoaded', function() {
     // Function to fetch data from the backend
     function fetchData(url, successCallback, errorCallback) {
@@ -45,6 +49,46 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+
+  // Function to render playlist details inside the container
+  function renderPlaylistDetails(playlist) {
+    if (!playlist || !playlist.tracks || playlist.tracks.length === 0) {
+      playlistDetailsDiv.innerHTML = '<p>No tracks found in this playlist.</p>';
+      return;
+    }
+    let html = `<h4 class="text-light">${playlist.name}</h4><ul class="list-unstyled">`;
+    playlist.tracks.forEach(track => {
+      html += `<li><strong>${track.title}</strong> - ${formatDuration(track.duration)}</li>`;
+    });
+    html += '</ul>';
+    playlistDetailsDiv.innerHTML = html;
+  }
+
+  // Helper to format duration in seconds to mm:ss
+  function formatDuration(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  }
+
+    $('.playlist_element').on('click', function() {
+        const playlistId = $(this).data('playlist-id');
+        console.log('Clicked playlist ID:', playlistId);
+        // Show loading state (if needed)
+        document.getElementById('player').innerHTML = '<h3>Loading playlist...</h3>';
+        // Fetch playlist data from the backend
+        fetchData(`/api/playlists/${playlistId}/`, (data) => {
+            // Update the player with the fetched playlist data
+            const playerDiv = document.getElementById('player');
+            playerDiv.innerHTML = `
+                <h2>${data.name}</h2>
+            `;
+        }, (error) => {
+            console.error('Error loading playlist:', error);
+        });
+    });
+
+    /*
     // Example: Fetch playlist data when "Browse" is clicked
     const browseLink = document.querySelector('a.nav-link[href*="Browse"]');
     browseLink.addEventListener('click', function(e) {
@@ -71,6 +115,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }, (error) => {
             console.error('Error loading browse content:', error);
         });
-    });
+    });*/
 });
+
+
+$(document).ready(function() {
+    // Initialize the player
+});
+
 </script>

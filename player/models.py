@@ -109,6 +109,28 @@ class Track(models.Model):
     def __str__(self):
         return f"{self.title} - {"/".join([x.name for x in self.artist.all()])}"
 
+    @property
+    def artists(self):
+        data = []
+        for artist_ in self.artist.all():
+            data.append(
+                {
+                    "name": artist_.name,
+                    "cover_art": artist_.cover_art,
+                    "id": artist_.id,
+                }
+            )
+        return data
+    @property
+    def genres(self):
+        return [genre.name for genre in self.genre.all()]
+    @property
+    def album_name(self):
+        return self.album.title
+    @property
+    def album_cover(self):
+        return self.album.cover_art_base64 if self.album else None
+
     def get_file_extension(self):
         return os.path.splitext(self.file_path)[1]
 

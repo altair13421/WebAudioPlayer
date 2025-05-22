@@ -1,12 +1,7 @@
 <div class="sidebar_card">
   <div class="sidebar_card__container">
    <span>Recent Playlists</span>
-   <p class="playlist_element">Try it</p>
-   <p class="playlist_element">Syntax</p>
-   <p class="playlist_element active">Formal definition</p>
-   <p class="playlist_element">Formal syntax</p>
-   <p class="playlist_element">Examples</p>
-   <p class="playlist_element">See also</p>
+   <p class="playlist_element" data-playlist-id="1">Base</p>
   </div>
 </div>
 
@@ -45,9 +40,54 @@
 </style>
 
 <script>
-  // Add event listener to each element
   const container = document.querySelectorAll('.sidebar_card__container');
 
+  const BASE_playlistListUrl = 'http://127.0.0.1:8000/api/playlists/'; // URL to fetch playlists
 
-  // Need to Populate Playlist everytime the Page Loads..... From /
+  async function fetchPlaylists() {
+    try {
+      const response = await fetch(BASE_playlistListUrl);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      return data; // Assuming the API returns an array of playlists
+    } catch (error) {
+      console.error('Error fetching playlists:', error);
+      return [];
+    }
+  }
+
+  async function renderPlaylists() {
+    let playlists = await fetchPlaylists();
+    const container = document.querySelector('.sidebar_card__container');
+    container.innerHTML = '<span>Recent Playlists</span>'; // Clear existing content
+    playlists.forEach(playlist => {
+      const playlistElement = document.createElement('p');
+      playlistElement.className = 'playlist_element';
+      playlistElement.textContent = playlist.name;
+      playlistElement.setAttribute('data-playlist-id', playlist.id);
+      playlistElement.addEventListener('click', () => {
+        console.log(`Clicked on playlist: ${playlist.name} with ID: ${playlist.id}`);
+        if (window.fetchPlaylistDetails) {
+          window.fetchPlaylistDetails(playlist.id);
+        }
+      });
+      container.appendChild(playlistElement);
+    });
+  }
+
+  renderPlaylists();
+container.addEventListener('click', (e) => {
+  const clickedElement = e.target.closest('.playlist_element');
+  if (clickedElement) {
+    // Remove 'active' class from all elements
+    const playlistElements = document.querySelectorAll('.playlist_element');
+    playlistElements.forEach((element) => {
+      element.classList.remove('active');
+    });
+    // Add 'active' class to clicked element
+    clickedElement.classList.add('active');
+  }
+});
 </script>

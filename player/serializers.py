@@ -3,6 +3,10 @@ from .models import Track, Artist, Album, Genre, Playlist
 
 
 class TrackSerializer(serializers.ModelSerializer):
+    artists = serializers.ListField(child=serializers.JSONField(), read_only=True)
+    genres = serializers.ListField(child=serializers.CharField(), read_only=True)
+    album_cover = serializers.CharField(read_only=True)
+
     class Meta:
         model = Track
         exclude = ["file_path"]
@@ -36,6 +40,7 @@ class ArtistSerializer(serializers.ModelSerializer):
     class Meta:
         model = Artist
         fields = "__all__"
+
 
 # only for the artist info
 # used in the artist detail view

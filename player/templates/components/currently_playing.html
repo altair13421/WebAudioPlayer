@@ -118,8 +118,8 @@
 .albumcover {
   position: relative;
   margin-right: 1em;
-  height: 40px;
-  width: 40px;
+  height: 60px;
+  width: 60px;
   background-color: rgb(233, 232, 232);
   align-self: center;
   border-radius: 5px;
@@ -129,8 +129,12 @@
   position: relative;
   transform: rotate(180deg);
   margin-right: 1em;
+  padding: 0.5em;
   color: grey;
-  align-self: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
 }
 
 .active-song {

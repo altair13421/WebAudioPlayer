@@ -77,8 +77,12 @@ def generate_playlist(count: int = 20) -> list[Track]:
     :param count: Number of tracks to include in the playlist
     :return: List of Track objects
     """
-    random_playlist = random.shuffle(list(Track.objects.all()))[:count]
-    return random_playlist
+    all_tracks = Track.objects.all()
+    all_tracks_list = list(all_tracks)
+    random.shuffle(all_tracks_list)
+    random_playlist = all_tracks_list[:count]
+
+    return Playlist.create_playlist(random_playlist)
 
 
 def generate_top_played(count: int = 20) -> list[Track]:
@@ -119,18 +123,20 @@ def generate_top_played(count: int = 20) -> list[Track]:
     # remove Instrumental from the list
     all_tracks = all_tracks.exclude(title__icontains="instrumental")
 
-    artist_tracks = all_tracks.filter(artist__name__in=artist_list)
-    genre_tracks = all_tracks.filter(genre__name__in=genre_list)
-    if artist_tracks.exists():
-        if artist_tracks.count() > 3:
-            artist_tracks = artist_tracks.order_by("-times_played")[:3]
+    artist_tracks = list(all_tracks.filter(artist__name__in=artist_list))
+    genre_tracks = list(all_tracks.filter(genre__name__in=genre_list))
+    if artist_tracks:
+        random.shuffle(artist_tracks)
+        if len(artist_tracks) > 3:
+            artist_tracks = artist_tracks[:3]
         else:
-            artist_tracks = artist_tracks.order_by("-times_played")
-    if genre_tracks.exists():
-        if genre_tracks.count() > 2:
-            genre_tracks = genre_tracks.order_by("-times_played")[:12]
+            artist_tracks = artist_tracks
+    if genre_tracks:
+        random.shuffle(genre_tracks)
+        if len(genre_tracks) > 2:
+            genre_tracks = genre_tracks[:12]
         else:
-            genre_tracks = genre_tracks.order_by("-times_played")
+            genre_tracks = genre_tracks
     all_lists = []
     for track in artist_tracks:
         if not track in all_lists:
@@ -147,7 +153,6 @@ def generate_top_played(count: int = 20) -> list[Track]:
         if random_track not in playlist:
             playlist.append(random_track)
 
-    ic(playlist)
     play = Playlist.create_playlist(playlist)
     return play
 
