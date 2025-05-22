@@ -1,5 +1,6 @@
 <!-- From Uiverse.io by Praashoo7 -->
 <div class="currently-playing-container" id="currently-playing-container">
+  <div id="currentPlaylistDetails" class=""></div>
   <div class="currentplaying">
     <p class="heading">Currently Playing</p>
   </div>
@@ -163,3 +164,45 @@
   }
 }
 </style>
+
+<script>
+  function mapCurrentPlaylistToSideBar(playlist) {
+  const playlistDetailsDiv = document.getElementById('currentPlaylistDetails');
+  playlistDetailsDiv.innerHTML = ''; // Clear previous content
+    if (!playlist || !playlist.tracks || playlist.tracks.length === 0) {
+      playlistDetailsDiv.innerHTML = '<p>No tracks found in this playlist.</p>';
+      return;
+    }
+  console.log(playlist);
+  let html = `
+    <div class="playlist-container" id="playlistContainer">
+      <div class="playlist-header">
+        <h4 class="playlist-title">${playlist.name}</h4>
+        <span class="playlist-track-count">${playlist.tracks.length} tracks</span>
+      </div>
+      <ul class="playlist-track-list list-unstyled">
+        ${playlist.tracks.map(track => `
+
+        <div class="loader playlist-track-item" data-track-id=${track.id} data-playlist-id=${playlist.id}>
+          <div class="song">
+            <p class="name">${track.title}</p>
+            <p class="artist">
+              ${track.artists.map(artist => `
+                <span class="artist-name"><a href="#" data-artist-id=${artist.id}>${artist.name}</a></span>
+              `).join(', ')}
+              <span class="time">${formatDuration(track.duration)}</span>
+            </p>
+          </div>
+          <div class="albumcover">
+            <img src="data:image/png;base64,${track.album_cover}" alt="Album Cover" class="img-fluid">
+          </div>
+          <div class="play" data-track-id=${track.id}></div>
+        </div>
+        `).join('')}
+      </ul>
+    </div>
+  `;
+  playlistDetailsDiv.innerHTML += html;
+  }
+  window.mapCurrentPlaylistToSideBar = mapCurrentPlaylistToSideBar;
+</script>

@@ -114,11 +114,13 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   let tracks = Array.from(document.querySelectorAll(".playlist-track-item"));
 
+
   document.querySelectorAll(".playlist-track-item").forEach((track, index) => {
     track.addEventListener("click", () => {
       const trackId = track.dataset.trackId;
       currentTrackIndex = index;
       playTrack(trackId);
+      mapCurrentPlaylistToSideBar(playlist);
     });
   });
 
@@ -143,11 +145,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Helper to format duration in seconds to mm:ss
-  function formatDuration(seconds) {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  }
 
   // Expose fetchPlaylistDetails globally for use when playlist clicked
   window.fetchPlaylistDetails = fetchPlaylistDetails;
@@ -156,5 +153,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
+function formatDuration(seconds) {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
   // Close button event to hide the browse playlists container
 </script>
