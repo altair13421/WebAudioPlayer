@@ -48,6 +48,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+  let tracks = [];
   const browsePlaylistsContainer = document.getElementById('browsePlaylistsContainer');
   const playlistDetailsDiv = document.getElementById('playlistDetails');
 
@@ -60,7 +61,6 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error('Failed to fetch playlist details');
       }
       const data = await response.json();
-      console.log('Fetched playlist details:', data);
       renderPlaylistDetails(data);
     } catch (error) {
       console.error('Error fetching playlist:', error);
@@ -85,14 +85,14 @@ document.addEventListener('DOMContentLoaded', () => {
       <ul class="playlist-track-list list-unstyled">
         ${playlist.tracks.map(track => `
 
-        <div class="loader playlist-track-item" data-track-id=${track.id}>
+        <div class="loader playlist-track-item" data-track-id=${track.id} data-playlist-id=${playlist.id}>
           <div class="song">
             <p class="name">${track.title}</p>
-            <p class="time">${formatDuration(track.duration)}</p>
             <p class="artist">
               ${track.artists.map(artist => `
                 <span class="artist-name"><a href="#" data-artist-id=${artist.id}>${artist.name}</a></span>
               `).join(', ')}
+              <span class="time">${formatDuration(track.duration)}</span>
             </p>
           </div>
           <div class="albumcover">
@@ -106,7 +106,40 @@ document.addEventListener('DOMContentLoaded', () => {
   `;
   // Add the close button to the top right corner
   html = button + html;
-    playlistDetailsDiv.innerHTML = html;
+  playlistDetailsDiv.innerHTML = html;
+
+  const closeBtn = document.getElementById('closeBrowsePlaylists');
+  closeBtn.addEventListener('click', () => {
+    document.getElementById('playlistContainer').style.display = 'none';
+  });
+  let tracks = Array.from(document.querySelectorAll(".playlist-track-item"));
+
+  document.querySelectorAll(".playlist-track-item").forEach((track, index) => {
+    track.addEventListener("click", () => {
+      const trackId = track.dataset.trackId;
+      currentTrackIndex = index;
+      playTrack(trackId);
+    });
+  });
+
+
+  document.getElementById("nextButton").addEventListener("click", () => {
+    if (currentTrackIndex < tracks.length - 1) {
+      currentTrackIndex++;
+      const trackId = tracks[currentTrackIndex].dataset.trackId;
+      playTrack(trackId);
+    }
+  });
+
+  document.getElementById("prevButton").addEventListener("click", () => {
+    if (currentTrackIndex > 0) {
+      currentTrackIndex--;
+      const trackId = tracks[currentTrackIndex].dataset.trackId;
+      playTrack(trackId);
+    }
+  });
+
+
   }
 
   // Helper to format duration in seconds to mm:ss
@@ -119,13 +152,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Expose fetchPlaylistDetails globally for use when playlist clicked
   window.fetchPlaylistDetails = fetchPlaylistDetails;
 
-  // Close button event to hide the browse playlists container
-  const closeBtn = document.getElementById('closeBrowsePlaylists');
-  closeBtn.addEventListener('click', () => {
-    document.getElementById('playlistContainer').style.display = 'none';
-  });
 
 });
 
 
+  // Close button event to hide the browse playlists container
 </script>

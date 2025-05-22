@@ -21,7 +21,7 @@ from urllib.parse import quote
 import time
 
 from .forms import FolderSelectForm
-from .models import Artist, Album, Genre, PlayHistory, Track
+from .models import Artist, Album, Genre, PlayHistory, Playlist, Track
 
 
 def album_art_writer(artist, album, file_data):
@@ -320,3 +320,15 @@ class HomeView(View):
     def get(self, request, *args, **kwargs):
         return render(request, "main_content.html")
 
+
+def search(request):
+    query = request.GET.get('q', '').lower()
+
+    # Search logic
+    search_results = {
+        'tracks': list(Track.objects.filter(title__icontains=query).values('id', 'title', 'artist')[:10]),
+        'playlists': list(Playlist.objects.filter(name__icontains=query).values('id', 'name')[:10]),
+        'albums': list(Album.objects.filter(title__icontains=query).values('id', 'title', 'artist')[:10])
+    }
+
+    return JsonResponse(search_results)

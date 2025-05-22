@@ -78,16 +78,5 @@
   }
 
   renderPlaylists();
-container.addEventListener('click', (e) => {
-  const clickedElement = e.target.closest('.playlist_element');
-  if (clickedElement) {
-    // Remove 'active' class from all elements
-    const playlistElements = document.querySelectorAll('.playlist_element');
-    playlistElements.forEach((element) => {
-      element.classList.remove('active');
-    });
-    // Add 'active' class to clicked element
-    clickedElement.classList.add('active');
-  }
-});
+
 </script>

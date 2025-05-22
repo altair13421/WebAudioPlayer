@@ -244,8 +244,8 @@
   let audio = new Audio();
   let isPlaying = false;
   let currentTrackIndex = -1;
-  let lastVolume = 1.0;
-  const tracks = Array.from(document.querySelectorAll(".track-item"));
+  let lastVolume = 0.5; // Default volume
+  // const tracks = Array.from(document.querySelectorAll(".playlist-track-item"));
 
   // Format time helper function
   function formatTime(seconds) {
@@ -421,7 +421,7 @@
       togglePlayPause();
     }
   });
-
+  /*
   document.getElementById("nextButton").addEventListener("click", () => {
     if (currentTrackIndex < tracks.length - 1) {
       currentTrackIndex++;
@@ -436,16 +436,16 @@
       const trackId = tracks[currentTrackIndex].dataset.trackId;
       playTrack(trackId);
     }
-  });
+  }); */
 
   // Track item click handlers
-  document.querySelectorAll(".track-item").forEach((track, index) => {
+  /* document.querySelectorAll(".playlist-track-item").forEach((track, index) => {
     track.addEventListener("click", () => {
       const trackId = track.dataset.trackId;
       currentTrackIndex = index;
       playTrack(trackId);
     });
-  });
+  }); */
 
   // Progress bar click handler
   document

@@ -11,6 +11,99 @@
           class="form-control bg-dark border-secondary text-light"
           placeholder="Search songs, artists, or albums..."
         />
+        <div id="search-results" class="mt-3"></div>
       </div>
     </div>
   </div>
+
+
+<style>
+.search-container {
+    padding: 1rem;
+}
+
+.search-input {
+    width: 100%;
+    border-color: #4CAF50;
+}
+
+.search-input:focus {
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 0.2rem rgba(76, 175, 80, 0.25);
+}
+
+.search-section {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.card-header {
+    background-color: #4CAF50 !important;
+}
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Search Input Handler
+    const searchInput = document.querySelector('#search-input');
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            const query = e.target.value.trim();
+
+            if (query.length >= 2) {
+                // Debounce the search request (optional)
+                clearTimeout(timeoutId);
+                const timeoutId = setTimeout(() => {
+                    fetchSearchResults(query);
+                }, 300);
+            }
+        });
+    }
+
+    // Function to fetch search results
+    function fetchSearchResults(query) {
+        fetch(`/api/search/?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                displaySearchResults(data);
+            })
+            .catch(error => {
+                console.error('Search error:', error);
+            });
+    }
+
+    // Function to display search results
+    function displaySearchResults(results) {
+        const searchResultsDiv = document.getElementById('search-results');
+        if (searchResultsDiv) {
+            searchResultsDiv.innerHTML = `
+                <h4>Search Results</h4>
+                <div class="search-section">
+                    ${renderSearchSection('Tracks', results.tracks)}
+                    ${renderSearchSection('Playlists', results.playlists)}
+                    ${renderSearchSection('Albums', resultsalbums)}
+                </div>
+            `;
+        }
+    }
+
+    // Helper function to render a section of search results
+    function renderSearchSection(title, items) {
+        if (items.length === 0) return '';
+
+        return `
+            <div class="card bg-dark text-white mb-3">
+                <div class="card-header">${title}</div>
+                <ul class="list-group list-group-flush">
+                    ${items.map(item => `
+                        <li class="list-group-item">
+                            <a href="#" class="text-light">${item.title || item.name}</a>
+                        </li>
+                    `).join('')}
+                </ul>
+            </div>
+        `;
+    }
+});
+</script>
