@@ -1,12 +1,21 @@
 <div class="sidebar_card">
   <div class="sidebar_card__container">
    <span>Recent Playlists</span>
-   <p class="playlist_element" data-playlist-id="1">Base</p>
+   <button class="btn btn-primary generate-button" id="generateRandomPlaylist">Generate Random Playlist</button>
+   <button class="btn btn-primary generate-button" id="generateTopPlaylist">Generate Top Playlist</button>
   </div>
 </div>
 
 <style>
 /* From Uiverse.io by Javierrocadev */
+.generate-button {
+  background-color: #004d92;
+  color: white;
+  border: none;
+  width: -webkit-fill-available;
+  padding: 10px;
+  margin: 10px;
+}
 .sidebar_card {
   width: 20vw;
   height: 95vh;
@@ -41,6 +50,9 @@
 
 <script>
   const container = document.querySelectorAll('.sidebar_card__container');
+  container.innerHTML = '<span>Recent Playlists</span>'; // Clear existing content
+  container.innerHTML += '<button class="btn btn-primary" id="generateRandomPlaylist">Generate Random Playlist</button>'; // Add random button
+  container.innerHTML += '<button class="btn btn-primary" id="generateTopPlaylist">Generate Top Playlist</button>'; // Add Top Generated button
 
   const BASE_playlistListUrl = 'http://127.0.0.1:8000/api/playlists/'; // URL to fetch playlists
 
@@ -59,9 +71,8 @@
   }
 
   async function renderPlaylists() {
-    let playlists = await fetchPlaylists();
     const container = document.querySelector('.sidebar_card__container');
-    container.innerHTML = '<span>Recent Playlists</span>'; // Clear existing content
+    let playlists = await fetchPlaylists();
     playlists.forEach(playlist => {
       const playlistElement = document.createElement('p');
       playlistElement.className = 'playlist_element';
@@ -78,5 +89,25 @@
   }
 
   renderPlaylists();
+
+
+  document.getElementById('generateRandomPlaylist').addEventListener('click', async () => {
+    const response = await fetch('/api/generate_playlist/');
+    if (response.ok) {
+      const data = await response.json();
+      renderPlaylists();
+    } else {
+      console.error('Error generating random playlist');
+    }
+  });
+  document.getElementById('generateTopPlaylist').addEventListener('click', async () => {
+    const response = await fetch('/api/generate_top_played/');
+    if (response.ok) {
+      const data = await response.json();
+      renderPlaylists();
+    } else {
+      console.error('Error generating top playlist');
+    }
+  });
 
 </script>

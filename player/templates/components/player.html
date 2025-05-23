@@ -175,6 +175,11 @@
             text-overflow: ellipsis;
         }
 
+
+        .playing {
+            background-color: #282828;
+            color: #fff;
+        }
 </style>
 
 
@@ -348,6 +353,7 @@
     // Create new audio object
     audio = new Audio();
     audio.volume = currentVolume;
+
 
     // Set up event listeners
     audio.addEventListener("timeupdate", updateProgress);

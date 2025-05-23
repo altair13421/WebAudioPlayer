@@ -1,45 +1,11 @@
 <!-- From Uiverse.io by Praashoo7 -->
 <div class="currently-playing-container" id="currently-playing-container">
   <div id="currentPlaylistDetails" class=""></div>
-  <div class="currentplaying">
-    <p class="heading">Currently Playing</p>
-  </div>
-  <div class="loader">
-    <div class="song active-song">
-      <p class="name">Time in a Bottle</p>
-      <p class="artist">Jim Corce</p>
-    </div>
-    <div class="albumcover"></div>
-    <div class="play"></div>
-  </div>
-  <div class="loader">
-    <div class="song">
-      <p class="name">My Way</p>
-      <p class="artist">Frank Sinatra</p>
-    </div>
-    <div class="albumcover"></div>
-    <div class="play"></div>
-  </div>
-  <div class="loader">
-    <div class="song">
-      <p class="name">Lemon Tree</p>
-      <p class="artist">Fools Garden</p>
-    </div>
-    <div class="albumcover"></div>
-    <div class="play"></div>
-  </div>
 </div>
 
 
 <style>
     /* From Uiverse.io by Praashoo7 */
-.main_playlist {
-  background-color: #1b1a1a;
-  height: 50vh;
-  padding: 1.1em;
-  padding-bottom: 1.1em;
-  color: white;
-}
 
 .loader {
   display: flex;
@@ -119,8 +85,8 @@
 .albumcover {
   position: relative;
   margin-right: 1em;
-  height: 60px;
-  width: 60px;
+  height: 50px;
+  width: 50px;
   background-color: rgb(233, 232, 232);
   align-self: center;
   transform: rotate(180deg);
@@ -146,14 +112,29 @@
   font-size: 0.6em;
 }
 
+
+  .playing {
+      background-color: #282828;
+      color: #fff;
+  }
 #currentPlaylistDetails {
-  height: 50vh;
+  background-color: #1b1a1a;
+  height: 45vh;
+  display: flex;
+  flex-direction: column;
+
+  padding: 1.1em;
+  padding-bottom: 1.1em;
+  color: white;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 1em;
-  background-color: #1b1a1a;
 }
 
+.time {
+  font-size: 0.6em;
+  color: #ccc;
+  transform: rotate(180deg);
+}
 @keyframes move6 {
   0% {
     height: 0.2em;
@@ -211,6 +192,50 @@
     </div>
   `;
   playlistDetailsDiv.innerHTML += html;
+
+
+  document.querySelectorAll(".playlist-track-item").forEach((track, index) => {
+    track.addEventListener("click", () => {
+      const trackId = track.dataset.trackId;
+      currentTrackIndex = index;
+      playTrack(trackId);
+      mapCurrentPlaylistToSideBar(playlist);
+    });
+  });
+
+
+  document.getElementById("nextButton").addEventListener("click", () => {
+    if (currentTrackIndex < tracks.length - 1) {
+      currentTrackIndex++;
+      const trackId = tracks[currentTrackIndex].dataset.trackId;
+      playTrack(trackId);
+    }
+  });
+
+  document.getElementById("prevButton").addEventListener("click", () => {
+    if (currentTrackIndex > 0) {
+      currentTrackIndex--;
+      const trackId = tracks[currentTrackIndex].dataset.trackId;
+      playTrack(trackId);
+    }
+  });
+
+    // Update current Playing in sidebar
+    const currentTrackElement = document.querySelector(
+      `.playlist-track-item[data-track-id="${trackId}"]`
+    );
+    if (currentTrackElement) {
+      currentTrackElement.classList.add("playing");
+    }
+
+
+
+
   }
   window.mapCurrentPlaylistToSideBar = mapCurrentPlaylistToSideBar;
+
+
+
+
+
 </script>
