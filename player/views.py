@@ -326,8 +326,9 @@ def search(request):
 
     # Search logic
     search_results = {
-        'tracks': list(Track.objects.filter(title__icontains=query).values('id', 'title', 'artist')[:10]),
+        'tracks': list(Track.objects.filter(title__icontains=query).values('id', 'title', 'album')[:10]),
         'playlists': list(Playlist.objects.filter(name__icontains=query).values('id', 'name')[:10]),
+        'artists': list(Artist.objects.filter(name__icontains=query).values('id', 'name')[:10]),
         'albums': list(Album.objects.filter(title__icontains=query).values('id', 'title', 'artist')[:10])
     }
 
