@@ -62,9 +62,6 @@ class ArtistViewSet(viewsets.ModelViewSet):
     """
     queryset = Artist.objects.all()
     serializer_class = ArtistSerializer
-    lookup_field = "name"
-    lookup_url_kwarg = "name"
-    lookup_value_regex = "[^/]+"
 
     def retrieve(self, request, *args, **kwargs):
         artist = self.get_object()
@@ -73,7 +70,12 @@ class ArtistViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["get"])
     def tracks(self, request, pk=None):
-        artist = self.get_object()
-        tracks = Track.objects.filter(artist=artist)
-        serializer = TrackSerializer(tracks, many=True)
+        artist: Artist = self.get_object()
+        serializer = TrackSerializer(artist.tracks.all(), many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["get"])
+    def albums(self, request, pk=None):
+        artist: Artist = self.get_object()
+        serializer = AlbumSerializer(artist.albums.all(), many=True)
         return Response(serializer.data)

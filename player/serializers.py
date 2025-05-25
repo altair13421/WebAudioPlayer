@@ -5,7 +5,7 @@ from .models import Track, Artist, Album, Genre, Playlist
 class TrackSerializer(serializers.ModelSerializer):
     artists = serializers.ListField(child=serializers.JSONField(), read_only=True)
     genres = serializers.ListField(child=serializers.CharField(), read_only=True)
-    album_cover = serializers.CharField(read_only=True)
+    # album_cover = serializers.CharField(read_only=True)
 
     class Meta:
         model = Track
@@ -20,7 +20,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class AlbumSerializer(serializers.ModelSerializer):
-    cover_art_base64 = serializers.CharField(source="cover_art_base64", read_only=True)
+    cover_art_base64 = serializers.CharField(read_only=True)
     track_count = serializers.IntegerField(read_only=True)
     tracks = TrackSerializer(many=True, read_only=True)
     artist = serializers.CharField(source="artist.name", read_only=True)
@@ -34,7 +34,6 @@ class ArtistSerializer(serializers.ModelSerializer):
     album_count = serializers.IntegerField(read_only=True)
     track_count = serializers.IntegerField(read_only=True)
     genres = serializers.ListField(child=serializers.CharField(), read_only=True)
-    albums = AlbumSerializer(many=True, read_only=True)
     cover_art = serializers.CharField(read_only=True)
 
     class Meta:
@@ -45,16 +44,16 @@ class ArtistSerializer(serializers.ModelSerializer):
 # only for the artist info
 # used in the artist detail view
 class ArtistInfoSerializer(serializers.ModelSerializer):
+    genres = serializers.ListField(child=serializers.CharField(), read_only=True)
+    info = serializers.JSONField(read_only=True)
     album_count = serializers.IntegerField(read_only=True)
     track_count = serializers.IntegerField(read_only=True)
-    genres = serializers.ListField(child=serializers.CharField(), read_only=True)
-    albums = AlbumSerializer(many=True, read_only=True)
-    cover_art = serializers.CharField(read_only=True)
-    info = serializers.JSONField(read_only=True)
+    # albums = AlbumSerializer(many=True, read_only=True)
+    # tracks = TrackSerializer(many=True, read_only=True)
 
     class Meta:
         model = Artist
-        fields = ["name", "id"]
+        fields = ["name", "id", "info", "genres", "album_count", "track_count", "tracks"]
         read_only_fields = ["id", "name", "album_count", "track_count", "genres"]
 
 
