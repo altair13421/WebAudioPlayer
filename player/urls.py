@@ -2,11 +2,12 @@ from django.urls import path
 from . import views
 
 from rest_framework.routers import DefaultRouter
-from .api import PlaylistsViewSet
+from .api import PlaylistsViewSet, ArtistViewSet
 
 # Create a router and register our viewset with it.
 router = DefaultRouter()
 router.register(r"api/playlists", PlaylistsViewSet, basename="playlists")
+router.register(r"api/artists", ArtistViewSet, basename="artists")
 
 
 urlpatterns = [

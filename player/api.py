@@ -3,7 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from player.utils import generate_playlist, generate_top_played
 from .models import Playlist, Track, Album, Artist, Genre
-from .serializers import PlaylistSerializer, TrackSerializer, AlbumSerializer, ArtistSerializer, GenreSerializer, PlaylistTrackSerializer
+from .serializers import ArtistInfoSerializer, PlaylistSerializer, TrackSerializer, AlbumSerializer, ArtistSerializer, GenreSerializer, PlaylistTrackSerializer
 
 class PlaylistsViewSet(viewsets.ModelViewSet):
     """
@@ -67,4 +67,13 @@ class ArtistViewSet(viewsets.ModelViewSet):
     lookup_value_regex = "[^/]+"
 
     def retrieve(self, request, *args, **kwargs):
-        return super().retrieve(request, *args, **kwargs)
+        artist = self.get_object()
+        serializer = ArtistInfoSerializer(artist)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["get"])
+    def tracks(self, request, pk=None):
+        artist = self.get_object()
+        tracks = Track.objects.filter(artist=artist)
+        serializer = TrackSerializer(tracks, many=True)
+        return Response(serializer.data)

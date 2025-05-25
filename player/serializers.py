@@ -45,6 +45,11 @@ class ArtistSerializer(serializers.ModelSerializer):
 # only for the artist info
 # used in the artist detail view
 class ArtistInfoSerializer(serializers.ModelSerializer):
+    album_count = serializers.IntegerField(read_only=True)
+    track_count = serializers.IntegerField(read_only=True)
+    genres = serializers.ListField(child=serializers.CharField(), read_only=True)
+    albums = AlbumSerializer(many=True, read_only=True)
+    cover_art = serializers.CharField(read_only=True)
     info = serializers.JSONField(read_only=True)
 
     class Meta:
@@ -54,6 +59,7 @@ class ArtistInfoSerializer(serializers.ModelSerializer):
 
 
 class PlaylistSerializer(serializers.ModelSerializer):
+    count = serializers.IntegerField(read_only=True)
     class Meta:
         model = Playlist
         fields = "__all__"
@@ -61,6 +67,7 @@ class PlaylistSerializer(serializers.ModelSerializer):
 
 class PlaylistTrackSerializer(serializers.ModelSerializer):
     tracks = TrackSerializer(read_only=True, many=True)
+    count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Playlist
