@@ -90,9 +90,8 @@
 
   renderPlaylists();
 
-
   document.getElementById('generateRandomPlaylist').addEventListener('click', async () => {
-    const response = await fetch('/api/generate_playlist/');
+    const response = await fetch('/api/playlists/generate_playlist/', {method: 'POST'});
     if (response.ok) {
       const data = await response.json();
       renderPlaylists();
@@ -101,7 +100,7 @@
     }
   });
   document.getElementById('generateTopPlaylist').addEventListener('click', async () => {
-    const response = await fetch('/api/generate_top_played/');
+    const response = await fetch('/api/playlists/generate_top_played/', {method: 'POST'});
     if (response.ok) {
       const data = await response.json();
       renderPlaylists();
@@ -109,5 +108,4 @@
       console.error('Error generating top playlist');
     }
   });
-
 </script>
