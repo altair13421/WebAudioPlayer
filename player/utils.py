@@ -92,7 +92,7 @@ def generate_top_played(count: int = 20) -> list[Track]:
     :return: List of Track objects
     """
     all_tracks = Track.objects.all().prefetch_related("artist", "album", "genre")
-    all_tracks_list = list(all_tracks)
+    all_tracks_list = list(all_tracks[:1000])
     random.shuffle(all_tracks_list)
     actual_play_count = all_tracks.filter(times_played__gt=0).order_by("-times_played")[
         :count
