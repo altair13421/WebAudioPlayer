@@ -12,3 +12,4 @@ Will Update Documentation
 
 - Need to Add Romaji Support
 - need to add artist playlist, or artist all songs support
+- Need to Add Recent Searches to This.
