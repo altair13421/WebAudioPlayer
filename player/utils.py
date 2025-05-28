@@ -1,7 +1,7 @@
 # views.py
 import random
 from django.db.models.manager import BaseManager
-from .models import Playlist, Track
+from .models import Artist, Playlist, Track
 import os
 from icecream import ic
 from django.db.models import F
@@ -71,7 +71,7 @@ def build_node(node, level=0):
     #     context["tree"].append(build_node(node))
 
 
-def generate_playlist(count: int = 20) -> list[Track]:
+def generate_playlist(count: int = 40) -> list[Track]:
     """
     Generates a playlist of random tracks.
     :param count: Number of tracks to include in the playlist
@@ -85,7 +85,7 @@ def generate_playlist(count: int = 20) -> list[Track]:
     return Playlist.create_playlist(random_playlist)
 
 
-def generate_top_played(count: int = 20) -> list[Track]:
+def generate_top_played(count: int = 40) -> list[Track]:
     """
     Generates a list of the most played tracks.
     :param count: Number of tracks to include
@@ -118,7 +118,6 @@ def generate_top_played(count: int = 20) -> list[Track]:
                     genre_list.append(genre.name)
 
     playlist = []
-    ic(artist_list, genre_list)
 
     # remove Instrumental from the list
     all_tracks = all_tracks.exclude(title__icontains="instrumental")
@@ -127,16 +126,10 @@ def generate_top_played(count: int = 20) -> list[Track]:
     genre_tracks = list(all_tracks.filter(genre__name__in=genre_list))
     if artist_tracks:
         random.shuffle(artist_tracks)
-        if len(artist_tracks) > 3:
-            artist_tracks = artist_tracks[:3]
-        else:
-            artist_tracks = artist_tracks
+        artist_tracks = artist_tracks[:3]
     if genre_tracks:
         random.shuffle(genre_tracks)
-        if len(genre_tracks) > 2:
-            genre_tracks = genre_tracks[:12]
-        else:
-            genre_tracks = genre_tracks
+        genre_tracks = genre_tracks[: count * (2 / 3)]
     all_lists = []
     for track in artist_tracks:
         if not track in all_lists:
@@ -157,10 +150,52 @@ def generate_top_played(count: int = 20) -> list[Track]:
     return play
 
 
-def generate_curated(count: int = 20) -> list[Track]:
+def generate_curated(count: int = 40) -> list[Track]:
     """
     Generates a list of the most rated tracks.
     :param count: Number of tracks to include
     :return: List of Track objects
     """
     most_listened = Track.objects.all().order_by("-times_played")[:count]
+
+
+def top_artist_mix(count: 40):
+    """
+    Generates a playlist with the top artists.
+    :param count: Number of tracks to include
+    :return: List of Track objects
+    """
+    top_tracks = Track.objects.filter("-times_played").prefetch_related("artists")[:count]
+    artists = Artist.objects.filter(tracks__in=top_tracks).distinct()
+    playlist = []
+    for artist in artists:
+        artist_tracks = artist.tracks.all()[:count // len(artists)]
+        playlist.extend(artist_tracks)
+    random_tracks = random.sample(playlist, count)
+    return Playlist.create_playlist(playlist)
+
+def generate_playlist_from_artist(artist: Artist, count: int = 40) -> list[Track]:
+    """
+    Generates a playlist from a specific artist.
+    :param artist: Artist object
+    :param count: Number of tracks to include
+    :return: List of Track objects
+    """
+    artist_tracks = artist.tracks.all()
+    if artist_tracks.count() < count:
+        count = artist_tracks.count()
+    random_tracks = random.sample(list(artist_tracks), count)
+    return Playlist.create_playlist(random_tracks)
+
+def generate_playlist_from_genre(genre: str, count: int = 40) -> list[Track]:
+    """
+    Generates a playlist from a specific genre.
+    :param genre: Genre string
+    :param count: Number of tracks to include
+    :return: List of Track objects
+    """
+    genre_tracks = Track.objects.filter(genre__name=genre)
+    if genre_tracks.count() < count:
+        count = genre_tracks.count()
+    random_tracks = random.sample(list(genre_tracks), count)
+    return Playlist.create_playlist(random_tracks)
