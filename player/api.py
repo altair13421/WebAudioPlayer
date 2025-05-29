@@ -111,7 +111,7 @@ class ArtistViewSet(viewsets.ModelViewSet):
         if artist.tracks.count() < 6:
             return Response({"error": "Not enough tracks for this artist"}, status=400)
         else:
-            if count < artist.tracks.count():
+            if count > artist.tracks.count():
                 count = artist.tracks.count()
         playlist = generate_playlist_from_artist(artist, count)
         serializer = PlaylistTrackSerializer(playlist)

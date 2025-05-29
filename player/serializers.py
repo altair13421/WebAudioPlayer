@@ -48,17 +48,28 @@ class ArtistInfoSerializer(serializers.ModelSerializer):
     info = serializers.JSONField(read_only=True)
     album_count = serializers.IntegerField(read_only=True)
     track_count = serializers.IntegerField(read_only=True)
+    cover_art = serializers.CharField(read_only=True)
     # albums = AlbumSerializer(many=True, read_only=True)
     # tracks = TrackSerializer(many=True, read_only=True)
 
     class Meta:
         model = Artist
-        fields = ["name", "id", "info", "genres", "album_count", "track_count", "tracks"]
+        fields = [
+            "name",
+            "id",
+            "info",
+            "genres",
+            "album_count",
+            "track_count",
+            "tracks",
+            "cover_art",
+        ]
         read_only_fields = ["id", "name", "album_count", "track_count", "genres"]
 
 
 class PlaylistSerializer(serializers.ModelSerializer):
     count = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = Playlist
         fields = "__all__"

@@ -121,12 +121,15 @@ class Track(models.Model):
                 }
             )
         return data
+
     @property
     def genres(self):
         return [genre.name for genre in self.genre.all()]
+
     @property
     def album_name(self):
         return self.album.title
+
     @property
     def album_cover(self):
         return self.album.cover_art_base64 if self.album else None
@@ -151,6 +154,16 @@ class Playlist(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     songs = models.ManyToManyField(Track, related_name="playlist")
+    playlist_type = models.CharField(
+        max_length=50,
+        choices=[
+            ("user", "User Created"),
+            ("auto", "Auto Generated"),
+            ("top", "Top Played"),
+            ("artist_mix", "Artist Mix"),
+        ],
+        default="user",
+    )
 
     @property
     def tracks(self):
@@ -160,18 +173,29 @@ class Playlist(models.Model):
     def count(self):
         return self.songs.count()
 
+    @property
+    def cover_art(self):
+        """Return the cover art of the first track in the playlist"""
+        if self.songs.exists():
+            first_track = self.songs.first()
+            return first_track.album.cover_art_base64 if first_track.album else None
+        return None
+
     @staticmethod
-    def create_playlist(playlist: list, name: str = None) -> "Playlist":
+    def create_playlist(
+        playlist: list, name: str | None = None, artist_mix: str | None = None
+    ) -> "Playlist":
         """Create a new playlist with the given tracks"""
-        if name in [None, ""]:
-            name = Playlist.generate_name(playlist)
+        if name in [None, ""] or artist_mix in [None, ""]:
+            name = Playlist.generate_name(playlist, artist_mix=artist_mix)
         playlist_obj = Playlist.objects.create(name=name)
         for track in playlist:
             playlist_obj.songs.add(track)
+        playlist_obj.playlist_type = "artist_mix" if artist_mix else "auto"
         return playlist_obj
 
     @staticmethod
-    def generate_name(playlist: list) -> str:
+    def generate_name(playlist: list, artist_mix = None) -> str:
         """Generate a random name for the playlist"""
         adjectives = [
             "Chill",
@@ -193,6 +217,9 @@ class Playlist(models.Model):
             "Jams",
         ]
         genre_list = []
+        if artist_mix:
+            # If artist_mix is provided, use it to generate a name
+            return f"{choice(adjectives)} {artist_mix} Mix"
         for track in playlist:
             for genre in track.genre.all():
                 if genre.name not in genre_list:
@@ -210,9 +237,12 @@ class Playlist(models.Model):
         ordering = ["-created_at"]
         # abstract = True
 
+
 class PlayHistory(models.Model):
     track = models.ForeignKey(Track, on_delete=models.CASCADE, null=True, blank=True)
-    playlist = models.ForeignKey(Playlist, on_delete=models.CASCADE, null=True, blank=True)
+    playlist = models.ForeignKey(
+        Playlist, on_delete=models.CASCADE, null=True, blank=True
+    )
     played_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

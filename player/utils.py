@@ -165,14 +165,23 @@ def top_artist_mix(count: 40):
     :param count: Number of tracks to include
     :return: List of Track objects
     """
-    top_tracks = Track.objects.filter("-times_played").prefetch_related("artists")[:count]
+    top_tracks = Track.objects.order_by("-times_played").prefetch_related("artists")[
+        :count
+    ]
     artists = Artist.objects.filter(tracks__in=top_tracks).distinct()
     playlist = []
     for artist in artists:
-        artist_tracks = artist.tracks.all()[:count // len(artists)]
+        artist_tracks = artist.tracks.all()[:count]
         playlist.extend(artist_tracks)
+    if len(playlist) < count:
+        all_tracks = Track.objects.all()
+        while len(playlist) < count:
+            random_track = random.choice(all_tracks)
+            if random_track not in playlist:
+                playlist.append(random_track)
     random_tracks = random.sample(playlist, count)
     return Playlist.create_playlist(playlist)
+
 
 def generate_playlist_from_artist(artist: Artist, count: int = 40) -> list[Track]:
     """
@@ -181,11 +190,35 @@ def generate_playlist_from_artist(artist: Artist, count: int = 40) -> list[Track
     :param count: Number of tracks to include
     :return: List of Track objects
     """
-    artist_tracks = artist.tracks.all()
+    artist_tracks: Track = artist.tracks.all()
+    genre_artists = (
+        Artist.objects.filter(
+            tracks__genre__in=artist_tracks.values_list("genre", flat=True)
+        )
+        .distinct()
+        .exclude(id=artist.id)
+    )
+    # raise Exception("Not implemented yet")
+    # print(count)
     if artist_tracks.count() < count:
+        # print("this true?")
         count = artist_tracks.count()
-    random_tracks = random.sample(list(artist_tracks), count)
-    return Playlist.create_playlist(random_tracks)
+    random_tracks = random.sample(list(artist_tracks), int(count * 2 / 3))
+    while len(random_tracks) < count:
+        # Add tracks from similar artists
+        similar_artist_tracks = random.sample(
+            list(genre_artists.values_list("tracks__id", flat=True)),
+            count - len(random_tracks),
+        )
+        similar_artist_tracks = Track.objects.filter(
+            id__in=similar_artist_tracks
+        ).exclude(id__in=[track.id for track in random_tracks])
+        random_tracks.extend(similar_artist_tracks)
+    random_tracks = random.sample(random_tracks, count)
+    # print(len(random_tracks), count)
+    # raise Exception("Not implemented yet")
+    return Playlist.create_playlist(random_tracks, artist_mix=artist.name)
+
 
 def generate_playlist_from_genre(genre: str, count: int = 40) -> list[Track]:
     """
