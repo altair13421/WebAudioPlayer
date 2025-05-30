@@ -1,7 +1,12 @@
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from player.utils import generate_playlist, generate_top_played, top_artist_mix, generate_playlist_from_artist
+from player.utils import (
+    generate_playlist,
+    generate_top_played,
+    top_artist_mix,
+    generate_playlist_from_artist,
+)
 from .models import Playlist, Track, Album, Artist, Genre
 from .serializers import (
     ArtistInfoSerializer,
@@ -98,6 +103,16 @@ class ArtistViewSet(viewsets.ModelViewSet):
         """
         count = request.data.get("count", 40)
         playlist = top_artist_mix(count)
+        serializer = PlaylistTrackSerializer(playlist)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=["post"], url_path="random")
+    def random_artists_mix(self, request):
+        """
+        Generate a playlist with the top artists.
+        """
+        count = request.data.get("count", 40)
+        playlist = generate_playlist(count)
         serializer = PlaylistTrackSerializer(playlist)
         return Response(serializer.data)
 

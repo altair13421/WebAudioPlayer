@@ -24,6 +24,16 @@ import time
 from .forms import FolderSelectForm
 from .models import Artist, Album, Genre, PlayHistory, Playlist, Track
 from .utils import process_directory
+from .serializers import (
+    TrackSerializer,
+    ArtistSerializer,
+    AlbumSerializer,
+    AlbumSearchSerializer,
+    GenreSerializer,
+    PlaylistSerializer,
+    PlaylistTrackSerializer,
+    ArtistInfoSerializer,
+)
 
 
 def album_art_writer(artist, album, file_data):
@@ -331,28 +341,30 @@ def search(request):
 
     # Search logic
     search_results = {
-        "tracks": list(
+        "tracks": TrackSerializer(
             Track.objects.filter(
                 Q(title__icontains=query) | Q(romaji_title__icontains=query)
             ).distinct()
-            .order_by("-times_played")
-            .values("id", "title", "romaji_title", "album__title", "artist__name")[:10]
-        ),
-        "playlists": list(
-            Playlist.objects.filter(name__icontains=query).values("id", "name")[:10]
-        ),
-        "artists": list(
+            .order_by("-times_played"),
+            many=True
+        ).data[:10],
+        "playlists": PlaylistSerializer(
+            Playlist.objects.filter(name__icontains=query).distinct(),
+            many=True
+        ).data[:10],
+        "artists": ArtistSerializer(
             Artist.objects.filter(
                 Q(name__icontains=query) | Q(romaji_name__icontains=query)
-            ).distinct().values("id", "name", "romaji_name")[:10]
-        ),
-        "albums": list(
+            ).distinct(),
+            many=True
+        ).data[:10],
+        "albums": AlbumSearchSerializer(
             Album.objects.filter(
                 Q(title__icontains=query) | Q(romaji_title__icontains=query)
             ).distinct()
-            .order_by("-tracks__times_played")
-            .values("id", "title", "romaji_title", "artist__name")[:10]
-        ),
+            .order_by("-tracks__times_played"),
+            many=True
+        ).data[:10],
     }
 
     return JsonResponse(search_results)

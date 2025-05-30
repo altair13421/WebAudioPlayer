@@ -5,6 +5,7 @@ from .models import Track, Artist, Album, Genre, Playlist
 class TrackSerializer(serializers.ModelSerializer):
     artists = serializers.ListField(child=serializers.JSONField(), read_only=True)
     genres = serializers.ListField(child=serializers.CharField(), read_only=True)
+    album = serializers.CharField(source="album.title", read_only=True)
     # album_cover = serializers.CharField(read_only=True)
 
     class Meta:
@@ -40,6 +41,14 @@ class ArtistSerializer(serializers.ModelSerializer):
         model = Artist
         fields = "__all__"
 
+
+class AlbumSearchSerializer(serializers.ModelSerializer):
+    track_count = serializers.IntegerField(read_only=True)
+    artist = ArtistSerializer(read_only=True)
+
+    class Meta:
+        model = Album
+        fields = "__all__"
 
 # only for the artist info
 # used in the artist detail view

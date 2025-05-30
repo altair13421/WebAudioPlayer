@@ -82,7 +82,7 @@ def generate_playlist(count: int = 40) -> list[Track]:
     :param count: Number of tracks to include in the playlist
     :return: List of Track objects
     """
-    all_tracks = Track.objects.all()
+    all_tracks = Track.objects.all().exclude(title__icontains="instrumental")
     all_tracks_list = list(all_tracks)
     random.shuffle(all_tracks_list)
     random_playlist = all_tracks_list[:count]
@@ -96,7 +96,7 @@ def generate_top_played(count: int = 40) -> list[Track]:
     :param count: Number of tracks to include
     :return: List of Track objects
     """
-    all_tracks = Track.objects.all()
+    all_tracks = Track.objects.all().exclude(title__icontains="instrumental")
     all_tracks_list = list(all_tracks[:1000])
     random.shuffle(all_tracks_list)
     actual_play_count = all_tracks.filter(times_played__gt=0).order_by("-times_played")[
@@ -124,9 +124,6 @@ def generate_top_played(count: int = 40) -> list[Track]:
 
     playlist = []
 
-    # remove Instrumental from the list
-    all_tracks = all_tracks.exclude(title__icontains="instrumental")
-
     artist_tracks = list(all_tracks.filter(artist__name__in=artist_list))
     genre_tracks = list(all_tracks.filter(genre__name__in=genre_list))
     if artist_tracks:
@@ -151,6 +148,9 @@ def generate_top_played(count: int = 40) -> list[Track]:
         if random_track not in playlist:
             playlist.append(random_track)
 
+    playlist = playlist[:count]
+
+    print(count)
     play = Playlist.create_playlist(playlist)
     return play
 
@@ -161,7 +161,11 @@ def generate_curated(count: int = 40) -> list[Track]:
     :param count: Number of tracks to include
     :return: List of Track objects
     """
-    most_listened = Track.objects.all().order_by("-times_played")[:count]
+    most_listened = (
+        Track.objects.all()
+        .exclude(title__icontains="instrumental")
+        .order_by("-times_played")[:count]
+    )
 
 
 def top_artist_mix(count: 40):
@@ -170,22 +174,29 @@ def top_artist_mix(count: 40):
     :param count: Number of tracks to include
     :return: List of Track objects
     """
-    top_tracks = Track.objects.order_by("-times_played").prefetch_related("artists")[
-        :count
-    ]
+    top_tracks = (
+        Track.objects.order_by("-times_played")
+        .exclude(title__icontains="instrumental")
+    )
+    top_tracks = random.sample(list(top_tracks), count)
     artists = Artist.objects.filter(tracks__in=top_tracks).distinct()
     playlist = []
     for artist in artists:
         artist_tracks = artist.tracks.all()[:count]
         playlist.extend(artist_tracks)
     if len(playlist) < count:
-        all_tracks = Track.objects.all()
+        all_tracks = Track.objects.all().exclude(
+            id__in=[track.id for track in playlist]
+        )
+        all_tracks = all_tracks.exclude(title__icontains="instrumental")
+        all_tracks = list(all_tracks)
+        random.shuffle(all_tracks)
         while len(playlist) < count:
             random_track = random.choice(all_tracks)
             if random_track not in playlist:
                 playlist.append(random_track)
     random_tracks = random.sample(playlist, count)
-    return Playlist.create_playlist(playlist)
+    return Playlist.create_playlist(random_tracks)
 
 
 def generate_playlist_from_artist(artist: Artist, count: int = 40) -> list[Track]:
@@ -268,7 +279,12 @@ def process_directory(directory_path):
                     created, track = process_file(file_path)
                     if created:
                         new_tracks += 1
-                        print("New track added:", track.title, "by", ", ".join(artist.name for artist in track.artist.all()))
+                        print(
+                            "New track added:",
+                            track.title,
+                            "by",
+                            ", ".join(artist.name for artist in track.artist.all()),
+                        )
                         yield f"New track added: {track.title} by {', '.join(artist.name for artist in track.artist.all())}"
                     else:
                         yield f"Track already exists: {track.title} by {', '.join(artist.name for artist in track.artist.all())}"
