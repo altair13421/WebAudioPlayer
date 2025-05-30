@@ -24,7 +24,7 @@ urlpatterns = [
         name="update_track",
     ),
     path(
-        "track/<int:track_id>/info/",
+        "api/track/<int:track_id>/info/",
         views.GetTrackInfoView.as_view(),
         name="get_track_info",
     ),
