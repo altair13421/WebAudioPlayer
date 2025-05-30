@@ -1,3 +1,4 @@
+from rest_framework.pagination import PageNumberPagination
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -78,6 +79,8 @@ class ArtistViewSet(viewsets.ModelViewSet):
 
     queryset = Artist.objects.all()
     serializer_class = ArtistSerializer
+    paginate_by = 30
+    pagination_class = PageNumberPagination
 
     def retrieve(self, request, *args, **kwargs):
         artist = self.get_object()

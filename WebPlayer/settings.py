@@ -184,6 +184,8 @@ REST_FRAMEWORK = {
         # Default renderer - do not include
         # 'rest_framework.renderers.TemplateRenderer',
     ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,  # Default page size for pagination
     # ...
 }
 
