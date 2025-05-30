@@ -333,13 +333,10 @@ def search(request):
     search_results = {
         "tracks": list(
             Track.objects.filter(
-                Q(title__icontains=query)
-                | Q(romaji_title__icontains=query)
-                | Q(artist__name__icontains=query)
-                | Q(artist__romaji_name__icontains=query)
-                | Q(album__title__icontains=query)
-                | Q(album__romaji_title__icontains=query)
-            ).values("id", "title", "romaji_title", "album__title", "artist__name")[:10]
+                Q(title__icontains=query) | Q(romaji_title__icontains=query)
+            ).distinct()
+            .order_by("-times_played")
+            .values("id", "title", "romaji_title", "album__title", "artist__name")[:10]
         ),
         "playlists": list(
             Playlist.objects.filter(name__icontains=query).values("id", "name")[:10]
@@ -347,13 +344,14 @@ def search(request):
         "artists": list(
             Artist.objects.filter(
                 Q(name__icontains=query) | Q(romaji_name__icontains=query)
-            ).values("id", "name", "romaji_name")[:10]
+            ).distinct().values("id", "name", "romaji_name")[:10]
         ),
         "albums": list(
             Album.objects.filter(
-                Q(title__icontains=query)
-                | Q(romaji_title__icontains=query)
-            ).values("id", "title", "romaji_title", "artist")[:10]
+                Q(title__icontains=query) | Q(romaji_title__icontains=query)
+            ).distinct()
+            .order_by("-tracks__times_played")
+            .values("id", "title", "romaji_title", "artist__name")[:10]
         ),
     }
 
