@@ -22,7 +22,7 @@ import time
 
 from .forms import FolderSelectForm
 from .models import Artist, Album, Genre, PlayHistory, Playlist, Track
-
+from .utils import process_directory
 
 def album_art_writer(artist, album, file_data):
     file_route = settings.MEDIA_ROOT / artist / f"{album}.png"
@@ -52,6 +52,7 @@ class v1IndexView(ListView):
         context["genres"] = Genre.objects.all()
         return context
 
+
 class ScanDirectoryView(View):
 
     def post(self, request, *args, **kwargs):
@@ -63,7 +64,7 @@ class ScanDirectoryView(View):
         audio_extensions = {".mp3", ".wav", ".ogg", ".m4a", ".flac"}
         scanned_files = 0
         new_tracks = 0
-
+        print("Starting directory scan...", directory_path)
         def processor_generator(directory_path):
             nonlocal scanned_files
             nonlocal new_tracks
@@ -316,20 +317,33 @@ class RemoveTrackView(View):
         track.delete()
         return JsonResponse({"status": "success"})
 
+
 class HomeView(View):
     def get(self, request, *args, **kwargs):
         return render(request, "main_content.html")
 
 
 def search(request):
-    query = request.GET.get('q', '').lower()
+    query = request.GET.get("q", "").lower()
 
     # Search logic
     search_results = {
-        'tracks': list(Track.objects.filter(title__icontains=query).values('id', 'title', 'album')[:10]),
-        'playlists': list(Playlist.objects.filter(name__icontains=query).values('id', 'name')[:10]),
-        'artists': list(Artist.objects.filter(name__icontains=query).values('id', 'name')[:10]),
-        'albums': list(Album.objects.filter(title__icontains=query).values('id', 'title', 'artist')[:10])
+        "tracks": list(
+            Track.objects.filter(title__icontains=query).values(
+                "id", "title", "album__title", "artist__name"
+            )[:10]
+        ),
+        "playlists": list(
+            Playlist.objects.filter(name__icontains=query).values("id", "name")[:10]
+        ),
+        "artists": list(
+            Artist.objects.filter(name__icontains=query).values("id", "name")[:10]
+        ),
+        "albums": list(
+            Album.objects.filter(title__icontains=query).values(
+                "id", "title", "artist"
+            )[:10]
+        ),
     }
 
     return JsonResponse(search_results)

@@ -11,6 +11,7 @@ from icecream import ic
 
 class Artist(models.Model):
     name = models.CharField(max_length=200)
+    romaji_name = models.CharField(max_length=200, blank=True, null=True)  # Romanized title
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     lastfm_ref = models.ForeignKey(
@@ -72,6 +73,7 @@ class Genre(models.Model):
 
 class Album(models.Model):
     title = models.CharField(max_length=200)
+    romaji_title = models.CharField(max_length=200, blank=True, null=True)  # Romanized title
     artist = models.ForeignKey(Artist, on_delete=models.CASCADE, related_name="albums")
     release_date = models.DateField(null=True, blank=True)
     cover_art = models.BinaryField(null=True, blank=True)
@@ -96,6 +98,7 @@ class Album(models.Model):
 
 class Track(models.Model):
     title = models.CharField(max_length=200)
+    romaji_title = models.CharField(max_length=200, blank=True, null=True)  # Romanized title
     artist = models.ManyToManyField(Artist, related_name="tracks")
     album = models.ForeignKey(Album, on_delete=models.CASCADE, related_name="tracks")
     genre = models.ManyToManyField(Genre, related_name="tracks")
