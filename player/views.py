@@ -6,6 +6,7 @@ from django import http
 from django.http import JsonResponse
 
 from django.db.models.manager import BaseManager
+from django.db.models import Q
 from django.shortcuts import redirect, get_object_or_404, render
 from django.http import JsonResponse, FileResponse, StreamingHttpResponse
 from django.contrib import messages
@@ -23,6 +24,7 @@ import time
 from .forms import FolderSelectForm
 from .models import Artist, Album, Genre, PlayHistory, Playlist, Track
 from .utils import process_directory
+
 
 def album_art_writer(artist, album, file_data):
     file_route = settings.MEDIA_ROOT / artist / f"{album}.png"
@@ -65,6 +67,7 @@ class ScanDirectoryView(View):
         scanned_files = 0
         new_tracks = 0
         print("Starting directory scan...", directory_path)
+
         def processor_generator(directory_path):
             nonlocal scanned_files
             nonlocal new_tracks
@@ -329,20 +332,28 @@ def search(request):
     # Search logic
     search_results = {
         "tracks": list(
-            Track.objects.filter(title__icontains=query).values(
-                "id", "title", "album__title", "artist__name"
-            )[:10]
+            Track.objects.filter(
+                Q(title__icontains=query)
+                | Q(romaji_title__icontains=query)
+                | Q(artist__name__icontains=query)
+                | Q(artist__romaji_name__icontains=query)
+                | Q(album__title__icontains=query)
+                | Q(album__romaji_title__icontains=query)
+            ).values("id", "title", "romaji_title", "album__title", "artist__name")[:10]
         ),
         "playlists": list(
             Playlist.objects.filter(name__icontains=query).values("id", "name")[:10]
         ),
         "artists": list(
-            Artist.objects.filter(name__icontains=query).values("id", "name")[:10]
+            Artist.objects.filter(
+                Q(name__icontains=query) | Q(romaji_name__icontains=query)
+            ).values("id", "name", "romaji_name")[:10]
         ),
         "albums": list(
-            Album.objects.filter(title__icontains=query).values(
-                "id", "title", "artist"
-            )[:10]
+            Album.objects.filter(
+                Q(title__icontains=query)
+                | Q(romaji_title__icontains=query)
+            ).values("id", "title", "romaji_title", "artist")[:10]
         ),
     }
 
