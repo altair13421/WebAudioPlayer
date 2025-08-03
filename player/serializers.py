@@ -6,6 +6,7 @@ class TrackSerializer(serializers.ModelSerializer):
     artists = serializers.ListField(child=serializers.JSONField(), read_only=True)
     genres = serializers.ListField(child=serializers.CharField(), read_only=True)
     album = serializers.CharField(source="album.title", read_only=True)
+    romaji_title = serializers.CharField(read_only=True)
     # album_cover = serializers.CharField(read_only=True)
 
     class Meta:
@@ -58,6 +59,7 @@ class ArtistInfoSerializer(serializers.ModelSerializer):
     album_count = serializers.IntegerField(read_only=True)
     track_count = serializers.IntegerField(read_only=True)
     cover_art = serializers.CharField(read_only=True)
+    singles = TrackSerializer(many=True, read_only=True)
     # albums = AlbumSerializer(many=True, read_only=True)
     # tracks = TrackSerializer(many=True, read_only=True)
 
@@ -72,6 +74,7 @@ class ArtistInfoSerializer(serializers.ModelSerializer):
             "track_count",
             "tracks",
             "cover_art",
+            "singles",
         ]
         read_only_fields = ["id", "name", "album_count", "track_count", "genres"]
 

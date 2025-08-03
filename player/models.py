@@ -23,6 +23,10 @@ class Artist(models.Model):
     )
 
     @property
+    def singles(self):
+        return self.tracks.exclude(album__artist=self,).filter(artist=self).distinct()
+
+    @property
     def cover_art(self):
         return self.lastfm_ref.any_image.image_link if self.lastfm_ref else ""
 
