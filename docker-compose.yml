@@ -29,7 +29,7 @@ services:
       - DATABASE_URL=sqlite:////app/data/db.sqlite3
     volumes:
       - ./WebAudioPlayer:/app
-      - webaudio_db:/app/data  # Use named volume instead
+      - ./data:/app/data  # Use named volume instead
       - /mnt/games/Music:/app/music  # Music directory
     ports:
       - "8008:8008"
@@ -38,5 +38,3 @@ services:
       # gunicorn --bind 0.0.0.0:8008 --workers 3 WebPlayer.wsgi:application
     command: ["sh", "-c", "python manage.py runserver 0.0.0:8008"]
 
-volumes:
-  webaudio_db:
