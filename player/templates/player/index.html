@@ -220,7 +220,7 @@
     button.addEventListener("click", (e) => {
       e.stopPropagation();
       const trackId = button.dataset.trackId;
-      fetch(`/track/${trackId}/info/`)
+      fetch(`/api/track/${trackId}/info/`)
         .then((response) => {
           if (!response.ok) {
             throw new Error("Track not found");
