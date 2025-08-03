@@ -1,0 +1,42 @@
+services:
+  frontend:
+    build:
+      context: ./webaudiofe
+      dockerfile: Dockerfile-dev
+    volumes:
+      - ./webaudiofe:/app
+      - /app/node_modules  # Isolate node_modules
+    environment:
+      - NODE_ENV=development
+      - REACT_APP_API_URL=http://localhost:8008/api/
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    stdin_open: true  # For interactive terminal
+    tty: true         # For color output
+
+  backend:
+    build:
+      context: ./WebAudioPlayer
+      dockerfile: Dockerfile
+    container_name: webaudio_backend
+    environment:
+      - DJANGO_SETTINGS_MODULE=WebPlayer.settings
+      - PYTHONUNBUFFERED=1
+      - SQLITE_DB_PATH=/app/data/db.sqlite3
+      - DATABASE_URL=sqlite:////app/data/db.sqlite3
+    volumes:
+      - ./WebAudioPlayer:/app
+      - webaudio_db:/app/data  # Use named volume instead
+      - /mnt/games/Music:/app/music  # Music directory
+    ports:
+      - "8008:8008"
+    restart: unless-stopped
+    # command: >
+      # gunicorn --bind 0.0.0.0:8008 --workers 3 WebPlayer.wsgi:application
+    command: ["sh", "-c", "python manage.py runserver 0.0.0:8008"]
+
+volumes:
+  webaudio_db:

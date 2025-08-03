@@ -62,6 +62,7 @@ class v1IndexView(ListView):
         context["artists"] = Artist.objects.all()
         context["albums"] = Album.objects.all()
         context["genres"] = Genre.objects.all()
+        context["db_path"] = settings.DATABASES['default']['NAME']
         return context
 
 

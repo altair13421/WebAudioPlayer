@@ -25,7 +25,6 @@ SECRET_KEY = 'django-insecure-=hjj=07x)f$d@#8qjsdar6r+h^i+ninw-av))4mhv$-n0@rz0m
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
 ALLOWED_HOSTS = []
 
 CORS_ALLOWED_ORIGINS = [
@@ -88,7 +87,7 @@ WSGI_APPLICATION = 'WebPlayer.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': os.getenv("SQLITE_DB_PATH", BASE_DIR / 'db.sqlite3'),
     }
 }
 
