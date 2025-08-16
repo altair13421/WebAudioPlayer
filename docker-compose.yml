@@ -9,8 +9,10 @@ services:
     environment:
       - NODE_ENV=development
       - REACT_APP_API_URL=http://localhost:8008/api/
+      - PORT=4000
+      - HOST=0.0.0.0
     ports:
-      - "3000:3000"
+      - "4000:4000"
     depends_on:
       - backend
     restart: unless-stopped
