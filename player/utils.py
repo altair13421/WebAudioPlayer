@@ -82,7 +82,7 @@ def generate_playlist(count: int = 40) -> list[Track]:
     :param count: Number of tracks to include in the playlist
     :return: List of Track objects
     """
-    all_tracks = Track.objects.all().exclude(title__icontains="instrumental")
+    all_tracks = Track.objects.all().exclude(title__icontains__in=["instrumental", "live"])
     all_tracks_list = list(all_tracks)
     random.shuffle(all_tracks_list)
     random_playlist = all_tracks_list[:count]
@@ -96,8 +96,8 @@ def generate_top_played(count: int = 40) -> list[Track]:
     :param count: Number of tracks to include
     :return: List of Track objects
     """
-    all_tracks = Track.objects.all().exclude(title__icontains="instrumental")
-    all_tracks_list = list(all_tracks[:1000])
+    all_tracks = Track.objects.all().exclude(title__icontains__in=["instrumental", "live"])
+    all_tracks_list = list(all_tracks)
     random.shuffle(all_tracks_list)
     actual_play_count = all_tracks.filter(times_played__gt=0).order_by("-times_played")[
         :count
@@ -188,7 +188,7 @@ def top_artist_mix(count: 40):
         all_tracks = Track.objects.all().exclude(
             id__in=[track.id for track in playlist]
         )
-        all_tracks = all_tracks.exclude(title__icontains="instrumental")
+        all_tracks = all_tracks.exclude(title__icontains__in=["instrumental", "live"])
         all_tracks = list(all_tracks)
         random.shuffle(all_tracks)
         while len(playlist) < count:
@@ -212,7 +212,7 @@ def generate_playlist_from_artist(artist: Artist, count: int = 40) -> list[Track
             tracks__genre__in=artist_tracks.values_list("genre", flat=True)
         )
         .distinct()
-        .exclude(id=artist.id)
+        .exclude(id=artist.id, title__icontains__in=["instrumental", "live"])
     )
     # raise Exception("Not implemented yet")
     # print(count)
@@ -243,7 +243,7 @@ def generate_playlist_from_genre(genre: str, count: int = 40) -> list[Track]:
     :param count: Number of tracks to include
     :return: List of Track objects
     """
-    genre_tracks = Track.objects.filter(genre__name=genre)
+    genre_tracks = Track.objects.filter(genre__name=genre).exclude(title__icontains__in=["instrumental", "live"])
     if genre_tracks.count() < count:
         count = genre_tracks.count()
     random_tracks = random.sample(list(genre_tracks), count)
