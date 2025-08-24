@@ -150,6 +150,14 @@ class LokiHandler(Handler):
             traceback.print_exc()
 
 
+def is_loki_available(url: str = "http://172.17.0.1:3100/loki/api/v1/push") -> bool:
+    """Check if Loki is reachable"""
+    try:
+        response = requests.get(url.replace('/loki/api/v1/push', '/ready'), timeout=2)
+        return response.status_code == 200
+    except:
+        return False
+
 def setup_loki_handler(loki_job: Dict[str, str] = None):
     """Setup direct Loki HTTP handler"""
     loki_endpoint = os.getenv(
@@ -185,10 +193,14 @@ def setup_logger(name: str, level: int = get_log_level_from_str()) -> logging.Lo
     logger.addHandler(handler)
 
     # Loki Handler
-    loki_handler = setup_loki_handler()
-    if loki_handler:
-        loki_handler.setLevel(log_level)
-        logger.addHandler(loki_handler)
+    if is_loki_available():
+        loki_handler = setup_loki_handler()
+        if loki_handler:
+            loki_handler.setLevel(log_level)
+            logger.addHandler(loki_handler)
+            print("Loki handler added successfully")
+    else:
+        print("Loki not available, skipping Loki handler")
     if not logger.hasHandlers():
         logger.addHandler(handler)
     # Return Normal
