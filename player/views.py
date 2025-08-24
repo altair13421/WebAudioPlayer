@@ -1,9 +1,5 @@
 import base64
-import json
 import os
-
-from django import http
-from django.http import JsonResponse
 
 from django.db.models.manager import BaseManager
 from django.db.models import Q
@@ -23,18 +19,15 @@ import time
 
 from .forms import FolderSelectForm
 from .models import Artist, Album, Genre, PlayHistory, Playlist, Track
-from .utils import process_directory
 from .serializers import (
     TrackSerializer,
     ArtistSerializer,
-    AlbumSerializer,
     AlbumSearchSerializer,
-    GenreSerializer,
     PlaylistSerializer,
-    PlaylistTrackSerializer,
-    ArtistInfoSerializer,
 )
+from .logger import setup_logger
 
+logger = setup_logger(__name__)
 
 def album_art_writer(artist, album, file_data):
     file_route = settings.MEDIA_ROOT / artist / f"{album}.png"
@@ -62,7 +55,7 @@ class v1IndexView(ListView):
         context["artists"] = Artist.objects.all()
         context["albums"] = Album.objects.all()
         context["genres"] = Genre.objects.all()
-        context["db_path"] = settings.DATABASES['default']['NAME']
+        context["db_path"] = settings.DATABASES["default"]["NAME"]
         return context
 
 
@@ -245,6 +238,15 @@ class PlayTrackView(View):
                 track=track,
                 playlist=None,  # Assuming this to None for now
             )
+            logger.info(
+                f"Playing track: {track.title} by {', '.join(artist.name for artist in track.artist.all())}",
+                extra={
+                    "track_id": track.id,
+                    "artists": [artist.name for artist in track.artist.all()],
+                    "album": track.album.title,
+                    "track_name": track.title,
+                }
+            )
             return response
 
         except Exception as e:
@@ -345,26 +347,27 @@ def search(request):
         "tracks": TrackSerializer(
             Track.objects.filter(
                 Q(title__icontains=query) | Q(romaji_title__icontains=query)
-            ).distinct()
+            )
+            .distinct()
             .order_by("-times_played"),
-            many=True
+            many=True,
         ).data[:10],
         "playlists": PlaylistSerializer(
-            Playlist.objects.filter(name__icontains=query).distinct(),
-            many=True
+            Playlist.objects.filter(name__icontains=query).distinct(), many=True
         ).data[:10],
         "artists": ArtistSerializer(
             Artist.objects.filter(
                 Q(name__icontains=query) | Q(romaji_name__icontains=query)
             ).distinct(),
-            many=True
+            many=True,
         ).data[:10],
         "albums": AlbumSearchSerializer(
             Album.objects.filter(
                 Q(title__icontains=query) | Q(romaji_title__icontains=query)
-            ).distinct()
+            )
+            .distinct()
             .order_by("-tracks__times_played"),
-            many=True
+            many=True,
         ).data[:10],
     }
 

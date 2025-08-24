@@ -3,9 +3,7 @@ import random
 from django.db.models.manager import BaseManager
 from .models import Artist, Playlist, Track, Genre, Album
 import os
-from icecream import ic
 from pathlib import Path
-from django.db.models import F
 from mutagen import File as MutagenFile
 from cutlet import Cutlet
 
@@ -134,10 +132,10 @@ def generate_top_played(count: int = 40) -> list[Track]:
         genre_tracks = genre_tracks[: count * (2 / 3)]
     all_lists = []
     for track in artist_tracks:
-        if not track in all_lists:
+        if track not in all_lists:
             all_lists.append(track)
     for track in genre_tracks:
-        if not track in all_lists:
+        if track not in all_lists:
             all_lists.append(track)
     random.shuffle(all_lists)
     playlist.extend(all_lists[:count])
@@ -249,8 +247,6 @@ def generate_playlist_from_genre(genre: str, count: int = 40) -> list[Track]:
     random_tracks = random.sample(list(genre_tracks), count)
     return Playlist.create_playlist(random_tracks)
 
-
-import os
 
 
 def process_directory(directory_path):

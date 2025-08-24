@@ -8,14 +8,13 @@ from player.utils import (
     top_artist_mix,
     generate_playlist_from_artist,
 )
-from .models import Playlist, Track, Album, Artist, Genre
+from .models import Playlist, Track, Artist
 from .serializers import (
     ArtistInfoSerializer,
     PlaylistSerializer,
     TrackSerializer,
     AlbumSerializer,
     ArtistSerializer,
-    GenreSerializer,
     PlaylistTrackSerializer,
 )
 

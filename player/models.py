@@ -1,17 +1,16 @@
 import base64
-from tabnanny import verbose
 from django.db import models
 import os
-from django.db.models.manager import BaseManager
 from random import choice
-from icecream import ic
 
 # Create your models here.
 
 
 class Artist(models.Model):
     name = models.CharField(max_length=200)
-    romaji_name = models.CharField(max_length=200, blank=True, null=True)  # Romanized title
+    romaji_name = models.CharField(
+        max_length=200, blank=True, null=True
+    )  # Romanized title
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     lastfm_ref = models.ForeignKey(
@@ -24,7 +23,13 @@ class Artist(models.Model):
 
     @property
     def singles(self):
-        return self.tracks.exclude(album__artist=self,).filter(artist=self).distinct()
+        return (
+            self.tracks.exclude(
+                album__artist=self,
+            )
+            .filter(artist=self)
+            .distinct()
+        )
 
     @property
     def cover_art(self):
@@ -77,7 +82,9 @@ class Genre(models.Model):
 
 class Album(models.Model):
     title = models.CharField(max_length=200)
-    romaji_title = models.CharField(max_length=200, blank=True, null=True)  # Romanized title
+    romaji_title = models.CharField(
+        max_length=200, blank=True, null=True
+    )  # Romanized title
     artist = models.ForeignKey(Artist, on_delete=models.CASCADE, related_name="albums")
     release_date = models.DateField(null=True, blank=True)
     cover_art = models.BinaryField(null=True, blank=True)
@@ -102,7 +109,9 @@ class Album(models.Model):
 
 class Track(models.Model):
     title = models.CharField(max_length=200)
-    romaji_title = models.CharField(max_length=200, blank=True, null=True)  # Romanized title
+    romaji_title = models.CharField(
+        max_length=200, blank=True, null=True
+    )  # Romanized title
     artist = models.ManyToManyField(Artist, related_name="tracks")
     album = models.ForeignKey(Album, on_delete=models.CASCADE, related_name="tracks")
     genre = models.ManyToManyField(Genre, related_name="tracks")
@@ -202,7 +211,7 @@ class Playlist(models.Model):
         return playlist_obj
 
     @staticmethod
-    def generate_name(playlist: list, artist_mix = None) -> str:
+    def generate_name(playlist: list, artist_mix=None) -> str:
         """Generate a random name for the playlist"""
         adjectives = [
             "Chill",

@@ -29,3 +29,9 @@ tzdata==2025.2
 unidic-lite
 urllib3==2.3.0
 whitenoise==6.9.0
+opentelemetry-sdk
+opentelemetry-instrumentation
+opentelemetry-instrumentation-django
+opentelemetry-exporter-otlp
+opentelemetry-exporter-otlp-proto-http
+opentelemetry-semantic-conventions
