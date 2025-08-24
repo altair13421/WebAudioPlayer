@@ -158,12 +158,12 @@ def is_loki_available(url: str = "http://172.17.0.1:3100/loki/api/v1/push") -> b
     except:
         return False
 
-def setup_loki_handler(loki_job: Dict[str, str] = None):
+def setup_loki_handler(url: str, loki_job: Dict[str, str] = None):
     """Setup direct Loki HTTP handler"""
     loki_endpoint = os.getenv(
         "LOKI_ENDPOINT",
         # "http://loki-gateway.observability.svc.cluster.local/loki/api/v1/push",
-        "http://172.17.0.1:3100/loki/api/v1/push",
+        url,
     )
     # print(f"Setting up Loki handler with endpoint: {loki_endpoint}")
     default_job = loki_job or {
@@ -191,10 +191,11 @@ def setup_logger(name: str, level: int = get_log_level_from_str()) -> logging.Lo
     handler.setLevel(log_level)
     handler.setFormatter(formatter)
     logger.addHandler(handler)
-
+    url = "http://172.17.0.1:3100/loki/api/v1/push" # For Docker Cause, Yeah
+    # url = "http://127.0.0.1:3100/loki/api/v1/push" # Localhost Testing
     # Loki Handler
-    if is_loki_available():
-        loki_handler = setup_loki_handler()
+    if is_loki_available(url):
+        loki_handler = setup_loki_handler(url)
         if loki_handler:
             loki_handler.setLevel(log_level)
             logger.addHandler(loki_handler)
